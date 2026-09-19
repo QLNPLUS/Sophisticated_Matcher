@@ -29,3 +29,9 @@ Forge 1.20.1 位于独立 worktree `D:\projects\Sophisticated_Matcher-forge-1.20
 - `D:\projects\Sophisticated_Matcher-forge-1.20.1\build\libs\sophisticated-matcher-forge-1.20.1-0.1.0.jar`
 
 Forge 1.20.1 分支声明 Sophisticated Core 最低版本为 `1.3.6.1514`。
+
+## 验证状态
+
+- NeoForge 1.21.1：`build` 成功；使用 Sophisticated Core 1.21.1-1.5.1.2341 的服务端烟测成功加载匹配器 Mixin 并完成启动。
+- Forge 1.20.1：`build` 成功；当前本地烟测使用的 Sophisticated Core 1.20.1-1.5.1.2335 在 Forge 47.4.20 初始化时出现 `NoSuchFieldError: f_256808_`，因此还需要在实际整合包中选用与 Forge 版本匹配的 Core 构建进行运行时确认。
+- 其余请求版本已列入 `VERSION_MATRIX.md`，尚未将未逐版本编译验证的分支标记为完成。
