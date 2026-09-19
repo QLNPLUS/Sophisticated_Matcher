@@ -87,7 +87,7 @@ public final class MatcherMenu extends AbstractContainerMenu {
 
     @Override
     public void clicked(int slotId, int button, ClickType clickType, Player player) {
-        if (slotId == PREVIEW_SLOT && clickType == ClickType.PICKUP) {
+        if (slotId == PREVIEW_SLOT) {
             ItemStack carried = getCarried();
             if (!carried.isEmpty() && !NbtMatcherItem.isMatcher(carried)) {
                 preview.setItem(0, carried.copyWithCount(1));
