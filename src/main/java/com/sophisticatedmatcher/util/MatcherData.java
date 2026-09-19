@@ -1,79 +1,71 @@
 package com.sophisticatedmatcher.util;
 
-import com.mojang.serialization.Codec;
 import com.sophisticatedmatcher.item.NbtMatcherItem;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.component.TypedDataComponent;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.world.item.component.CustomData;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
+/** Stores one top-level legacy item NBT entry on the matcher item. */
 public final class MatcherData {
     private static final String DATA_KEY = "sophisticated_matcher";
     private static final String PREVIEW_KEY = "preview";
-    private static final String COMPONENT_KEY = "component";
+    private static final String NBT_KEY = "nbt_key";
     private static final String VALUE_KEY = "value";
 
     private MatcherData() {
     }
 
-    public record ComponentEntry(String id, String text, DataComponentType<?> type, Object value) {
+    public record ComponentEntry(String id, String text, Tag value) {
     }
 
     public static List<ComponentEntry> entries(ItemStack stack) {
         List<ComponentEntry> entries = new ArrayList<>();
-        if (stack.isEmpty()) {
+        if (stack.isEmpty() || !stack.hasTag()) {
             return entries;
         }
-        for (TypedDataComponent<?> component : stack.getComponents()) {
-            ResourceLocation id = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(component.type());
-            if (id == null) {
-                continue;
+        CompoundTag tag = stack.getTag();
+        for (String key : tag.getAllKeys()) {
+            Tag value = tag.get(key);
+            if (value != null) {
+                entries.add(new ComponentEntry(key, key + " = " + value, value.copy()));
             }
-            String value = encodeComponent(component.type(), component.value()).map(Tag::toString).orElse(String.valueOf(component.value()));
-            entries.add(new ComponentEntry(id.toString(), id + " = " + value, component.type(), component.value()));
         }
         return entries;
     }
 
-    public static void save(ItemStack matcher, ItemStack preview, int entryIndex, HolderLookup.Provider registries) {
+    public static void save(ItemStack matcher, ItemStack preview, int entryIndex) {
         List<ComponentEntry> entries = entries(preview);
         if (!NbtMatcherItem.isMatcher(matcher) || entryIndex < 0 || entryIndex >= entries.size()) {
             return;
         }
 
         ComponentEntry selected = entries.get(entryIndex);
-        CompoundTag root = getCustomData(matcher);
-        CompoundTag data = root.getCompound(DATA_KEY);
-        data.putString(COMPONENT_KEY, selected.id());
-        encodeComponent(selected.type(), selected.value()).ifPresent(value -> data.put(VALUE_KEY, value.copy()));
-        encodePreview(preview, registries).ifPresent(value -> data.put(PREVIEW_KEY, value));
+        CompoundTag root = matcher.getOrCreateTag();
+        CompoundTag data = root.contains(DATA_KEY, Tag.TAG_COMPOUND)
+                ? root.getCompound(DATA_KEY)
+                : new CompoundTag();
+        data.putString(NBT_KEY, selected.id());
+        data.put(VALUE_KEY, selected.value().copy());
+        CompoundTag previewTag = new CompoundTag();
+        preview.save(previewTag);
+        data.put(PREVIEW_KEY, previewTag);
         root.put(DATA_KEY, data);
-        matcher.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, CustomData.of(root));
+        matcher.setTag(root);
     }
 
-    public static ItemStack preview(ItemStack matcher, HolderLookup.Provider registries) {
+    public static ItemStack preview(ItemStack matcher) {
         CompoundTag data = getData(matcher);
-        if (!data.contains(PREVIEW_KEY)) {
+        if (!data.contains(PREVIEW_KEY, Tag.TAG_COMPOUND)) {
             return ItemStack.EMPTY;
         }
-        return ItemStack.CODEC.parse(RegistryOps.create(NbtOps.INSTANCE, registries), data.get(PREVIEW_KEY))
-                .result().orElse(ItemStack.EMPTY);
+        return ItemStack.of(data.getCompound(PREVIEW_KEY));
     }
 
     public static int selectedIndex(ItemStack matcher, ItemStack preview) {
-        String selected = getData(matcher).getString(COMPONENT_KEY);
+        String selected = getData(matcher).getString(NBT_KEY);
         if (selected.isEmpty()) {
             return -1;
         }
@@ -90,46 +82,22 @@ public final class MatcherData {
         if (target.isEmpty()) {
             return false;
         }
-        return matches(matcher, target.getComponents());
-    }
-
-    public static boolean matches(ItemStack matcher, net.minecraft.world.item.Item item, DataComponentMap components) {
-        if (item == null) {
-            return false;
-        }
-        return matches(matcher, components);
-    }
-
-    private static boolean matches(ItemStack matcher, DataComponentMap components) {
         CompoundTag data = getData(matcher);
-        String componentId = data.getString(COMPONENT_KEY);
+        String key = data.getString(NBT_KEY);
         Tag expected = data.get(VALUE_KEY);
-        if (componentId.isEmpty() || expected == null) {
+        CompoundTag targetTag = target.getTag();
+        if (key.isEmpty() || expected == null || targetTag == null) {
             return false;
         }
-        DataComponentType<?> type = BuiltInRegistries.DATA_COMPONENT_TYPE.getOptional(ResourceLocation.parse(componentId)).orElse(null);
-        if (type == null) {
-            return false;
-        }
-        Object actual = components.get(type);
-        return actual != null && encodeComponent(type, actual).map(expected::equals).orElse(false);
+        Tag actual = targetTag.get(key);
+        return actual != null && expected.equals(actual);
     }
 
     private static CompoundTag getData(ItemStack matcher) {
-        return getCustomData(matcher).getCompound(DATA_KEY);
-    }
-
-    private static CompoundTag getCustomData(ItemStack matcher) {
-        return matcher.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-    }
-
-    private static Optional<Tag> encodePreview(ItemStack preview, HolderLookup.Provider registries) {
-        return ItemStack.CODEC.encodeStart(RegistryOps.create(NbtOps.INSTANCE, registries), preview).result();
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Optional<Tag> encodeComponent(DataComponentType<?> type, Object value) {
-        Codec<Object> codec = (Codec<Object>) type.codec();
-        return codec.encodeStart(NbtOps.INSTANCE, value).result();
+        CompoundTag root = matcher.getTag();
+        if (root == null || !root.contains(DATA_KEY, Tag.TAG_COMPOUND)) {
+            return new CompoundTag();
+        }
+        return root.getCompound(DATA_KEY);
     }
 }

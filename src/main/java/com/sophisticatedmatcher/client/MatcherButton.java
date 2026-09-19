@@ -8,9 +8,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 public final class MatcherButton extends Button {
-    private static final ResourceLocation NORMAL = ResourceLocation.fromNamespaceAndPath(SophisticatedMatcherMod.MOD_ID, "textures/gui/button.png");
-    private static final ResourceLocation HOVER = ResourceLocation.fromNamespaceAndPath(SophisticatedMatcherMod.MOD_ID, "textures/gui/button_hover.png");
-    private static final ResourceLocation PRESSED = ResourceLocation.fromNamespaceAndPath(SophisticatedMatcherMod.MOD_ID, "textures/gui/button_pressed.png");
+    private static final ResourceLocation NORMAL = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/button.png");
+    private static final ResourceLocation HOVER = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/button_hover.png");
+    private static final ResourceLocation PRESSED = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/button_pressed.png");
 
     public MatcherButton(int x, int y, Component message, OnPress onPress) {
         super(x, y, 60, 16, message, onPress, DEFAULT_NARRATION);

@@ -27,7 +27,7 @@ public final class MatcherMenu extends AbstractContainerMenu {
         Player player = inventory.player;
         ItemStack matcher = findMatcher(player);
         if (matcher != null) {
-            ItemStack savedPreview = MatcherData.preview(matcher, player.level().registryAccess());
+            ItemStack savedPreview = MatcherData.preview(matcher);
             if (!savedPreview.isEmpty()) {
                 preview.setItem(0, savedPreview.copyWithCount(1));
                 selectedIndex = MatcherData.selectedIndex(matcher, savedPreview);
@@ -71,7 +71,7 @@ public final class MatcherMenu extends AbstractContainerMenu {
             if (matcher == null) {
                 return false;
             }
-            MatcherData.save(matcher, previewStack(), selectedIndex, serverPlayer.level().registryAccess());
+            MatcherData.save(matcher, previewStack(), selectedIndex);
             serverPlayer.getInventory().setChanged();
             return true;
         }

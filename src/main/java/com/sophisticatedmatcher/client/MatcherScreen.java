@@ -12,7 +12,7 @@ import net.minecraft.world.entity.player.Inventory;
 import java.util.List;
 
 public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
-    private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(SophisticatedMatcherMod.MOD_ID, "textures/gui/background.png");
+    private static final ResourceLocation BACKGROUND = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/background.png");
     private static final int GUI_WIDTH = 250;
     private static final int GUI_HEIGHT = 200;
     private static final int LIST_X = 62;
@@ -79,14 +79,14 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
         if (mouseX >= leftPos + LIST_X && mouseX < leftPos + GUI_WIDTH - 8
                 && mouseY >= topPos + LIST_Y && mouseY < topPos + LIST_Y + VISIBLE_ROWS * ROW_HEIGHT) {
             int maxOffset = Math.max(0, menu.entries().size() - VISIBLE_ROWS);
             scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset - (int) Math.signum(scrollY)));
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        return super.mouseScrolled(mouseX, mouseY, scrollY);
     }
 
     @Override
