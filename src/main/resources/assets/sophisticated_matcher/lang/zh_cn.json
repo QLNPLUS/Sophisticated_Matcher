@@ -1,0 +1,6 @@
+{
+  "item.sophisticated_matcher.nbt_matcher": "NBT 匹配器",
+  "container.sophisticated_matcher.matcher": "NBT 匹配器",
+  "gui.sophisticated_matcher.save": "保存",
+  "gui.sophisticated_matcher.component": "组件 / NBT"
+}

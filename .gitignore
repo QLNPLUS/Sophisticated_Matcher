@@ -1,0 +1,26 @@
+# Gradle
+.gradle/
+.gradle-home/
+.tmp/
+.tmp_kjs/
+build/
+run/
+src/generated/resources/
+
+# Local-only data and helper tools
+/converted_sdmshop/
+/lm-studio/
+/tools/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+bin/
+
+# OS
+Thumbs.db
+.DS_Store

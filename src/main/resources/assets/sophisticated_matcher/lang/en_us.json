@@ -1,0 +1,6 @@
+{
+  "item.sophisticated_matcher.nbt_matcher": "NBT Matcher",
+  "container.sophisticated_matcher.matcher": "NBT Matcher",
+  "gui.sophisticated_matcher.save": "Save",
+  "gui.sophisticated_matcher.component": "Component"
+}
