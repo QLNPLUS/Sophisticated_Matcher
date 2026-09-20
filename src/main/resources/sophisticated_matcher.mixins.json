@@ -3,6 +3,7 @@
   "minVersion": "0.8",
   "package": "com.sophisticatedmatcher.compat",
   "compatibilityLevel": "JAVA_17",
+  "refmap": "sophisticated_matcher.refmap.json",
   "mixins": [
     "SophisticatedFilterLogicMixin"
   ],

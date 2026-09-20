@@ -22,6 +22,8 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     private static final int SELECTOR_WIDTH = 120;
     private static final int SELECTOR_HEIGHT = 18;
     private static final int DROPDOWN_WIDTH = 120;
+    private static final int DROPDOWN_TEXTURE_HEIGHT = 78;
+    private static final int DROPDOWN_EDGE_HEIGHT = 3;
     private static final int DROPDOWN_PADDING = 6;
     private static final int ROW_HEIGHT = 12;
     private static final int MAX_VISIBLE_ROWS = 6;
@@ -90,6 +92,10 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
         }
 
         if (button == 0 && isInsideSelector(mouseX, mouseY)) {
+            if (menu.previewStack().isEmpty() || menu.entries().isEmpty()) {
+                dropdownOpen = false;
+                return true;
+            }
             dropdownOpen = true;
             scrollOffset = Math.min(scrollOffset, maxScrollOffset());
             return true;
@@ -164,22 +170,16 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     }
 
     private void renderDropdownBackground(GuiGraphics graphics, int x, int y, int height) {
-        int textureHeight = 42;
-        int edgeHeight = 4;
-        graphics.blit(DROPDOWN, x, y, 0, 0, DROPDOWN_WIDTH, edgeHeight,
-                DROPDOWN_WIDTH, textureHeight);
-        int middleHeight = Math.max(0, height - edgeHeight * 2);
-        int middleY = y + edgeHeight;
-        while (middleHeight > 0) {
-            int chunkHeight = Math.min(middleHeight, textureHeight - edgeHeight * 2);
-            graphics.blit(DROPDOWN, x, middleY, 0, edgeHeight,
-                    DROPDOWN_WIDTH, chunkHeight, DROPDOWN_WIDTH, textureHeight);
-            middleY += chunkHeight;
-            middleHeight -= chunkHeight;
+        graphics.blit(DROPDOWN, x, y, 0, 0, DROPDOWN_WIDTH, DROPDOWN_EDGE_HEIGHT,
+                DROPDOWN_WIDTH, DROPDOWN_TEXTURE_HEIGHT);
+        int middleHeight = Math.max(0, height - DROPDOWN_EDGE_HEIGHT * 2);
+        if (middleHeight > 0) {
+            graphics.blit(DROPDOWN, x, y + DROPDOWN_EDGE_HEIGHT, 0, DROPDOWN_EDGE_HEIGHT,
+                    DROPDOWN_WIDTH, middleHeight, DROPDOWN_WIDTH, DROPDOWN_TEXTURE_HEIGHT);
         }
-        graphics.blit(DROPDOWN, x, y + height - edgeHeight, 0,
-                textureHeight - edgeHeight, DROPDOWN_WIDTH, edgeHeight,
-                DROPDOWN_WIDTH, textureHeight);
+        graphics.blit(DROPDOWN, x, y + height - DROPDOWN_EDGE_HEIGHT, 0,
+                DROPDOWN_TEXTURE_HEIGHT - DROPDOWN_EDGE_HEIGHT, DROPDOWN_WIDTH,
+                DROPDOWN_EDGE_HEIGHT, DROPDOWN_WIDTH, DROPDOWN_TEXTURE_HEIGHT);
     }
 
     private String selectorSummary() {
@@ -187,6 +187,9 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
         int selected = menu.selectedIndex();
         if (selected >= 0 && selected < entries.size()) {
             return entries.get(selected).text();
+        }
+        if (!menu.previewStack().isEmpty() && entries.isEmpty()) {
+            return Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".no_nbt").getString();
         }
         return Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".select").getString();
     }
@@ -295,6 +298,7 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
             if (dx != 0 || dy != 0) {
                 int step = hasAltDown() ? 1 : 5;
                 MatcherLayoutDebug.moveSelected(dx * step, dy * step);
+                MatcherLayoutDebug.applyMenuLayout(menu);
                 return true;
             }
         }
