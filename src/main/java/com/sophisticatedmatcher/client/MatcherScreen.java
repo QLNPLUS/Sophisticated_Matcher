@@ -3,6 +3,7 @@ package com.sophisticatedmatcher.client;
 import com.sophisticatedmatcher.SophisticatedMatcherMod;
 import com.sophisticatedmatcher.menu.MatcherMenu;
 import com.sophisticatedmatcher.util.MatcherData;
+import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -15,6 +16,8 @@ import java.util.List;
 public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     private static final ResourceLocation BACKGROUND = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/background.png");
     private static final ResourceLocation DROPDOWN = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/dropdown.png");
+    private static final ResourceLocation SCROLL_TRACK = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/scroll_track.png");
+    private static final ResourceLocation SCROLL_KNOB = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/scroll_knob.png");
     private static final int GUI_WIDTH = 176;
     private static final int GUI_HEIGHT = 166;
     private static final int SELECTOR_X = 50;
@@ -27,6 +30,9 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     private static final int DROPDOWN_PADDING = 6;
     private static final int ROW_HEIGHT = 12;
     private static final int MAX_VISIBLE_ROWS = 6;
+    private static final int SCROLLBAR_WIDTH = 8;
+    private static final int SCROLLBAR_GAP = 3;
+    private static final int SCROLL_KNOB_TEXTURE_HEIGHT = 8;
     private int scrollOffset;
     private boolean dropdownOpen;
     private MatcherButton saveButton;
@@ -143,27 +149,42 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
         List<MatcherData.ComponentEntry> entries = menu.entries();
         scrollOffset = Math.min(scrollOffset, maxScrollOffset());
         int rows = visibleRows();
+        boolean hasScrollbar = entries.size() > MAX_VISIBLE_ROWS;
+        int textX = x + 5;
+        int textRight = x + DROPDOWN_WIDTH
+                - (hasScrollbar ? SCROLLBAR_WIDTH + SCROLLBAR_GAP : DROPDOWN_PADDING);
+        int textTop = y + DROPDOWN_PADDING;
+        int textBottom = textTop + rows * ROW_HEIGHT;
+        graphics.enableScissor(textX, textTop, textRight, textBottom);
         for (int row = 0; row < rows; row++) {
             int index = scrollOffset + row;
             if (index >= entries.size()) {
                 break;
             }
             MatcherData.ComponentEntry entry = entries.get(index);
-            int color = index == menu.selectedIndex() ? 0xFFFFFF55 : 0x404040;
-            String text = font.plainSubstrByWidth(entry.text(), DROPDOWN_WIDTH - 10);
-            graphics.drawString(font, text, x + 5, y + DROPDOWN_PADDING + row * ROW_HEIGHT,
-                    color, false);
+            int rowY = textTop + row * ROW_HEIGHT;
+            if (index == menu.selectedIndex()) {
+                graphics.fill(textX - 2, rowY - 1, textRight, rowY + font.lineHeight + 1,
+                        0x55333333);
+            }
+            int visibleWidth = textRight - textX;
+            int textWidth = font.width(entry.text());
+            int offset = marqueeOffset(index, textWidth, visibleWidth);
+            graphics.drawString(font, entry.text(), textX - offset, rowY, 0xFFFFFFFF, false);
         }
-        if (entries.size() > MAX_VISIBLE_ROWS) {
-            int trackX = x + DROPDOWN_WIDTH - 7;
+        graphics.disableScissor();
+        if (hasScrollbar) {
+            int trackX = x + DROPDOWN_WIDTH - SCROLLBAR_WIDTH - 2;
             int trackY = y + DROPDOWN_PADDING;
             int trackHeight = rows * ROW_HEIGHT;
-            graphics.fill(trackX, trackY, trackX + 3, trackY + trackHeight, 0x55333333);
-            int knobHeight = Math.max(6, trackHeight * rows / entries.size());
+            graphics.blit(SCROLL_TRACK, trackX, trackY, 0, 0, SCROLLBAR_WIDTH, trackHeight,
+                    SCROLLBAR_WIDTH, 16);
+            int knobHeight = Math.max(8, trackHeight * rows / entries.size());
             int knobRange = Math.max(0, trackHeight - knobHeight);
             int knobY = trackY + (maxScrollOffset() == 0 ? 0
                     : knobRange * scrollOffset / maxScrollOffset());
-            graphics.fill(trackX, knobY, trackX + 3, knobY + knobHeight, 0xFF777777);
+            graphics.blit(SCROLL_KNOB, trackX, knobY, 0, 0, SCROLLBAR_WIDTH, knobHeight,
+                    SCROLLBAR_WIDTH, SCROLL_KNOB_TEXTURE_HEIGHT);
         }
         graphics.flush();
         graphics.pose().popPose();
@@ -218,6 +239,27 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
 
     private int dropdownHeight() {
         return DROPDOWN_PADDING + visibleRows() * ROW_HEIGHT;
+    }
+
+    private int marqueeOffset(int entryIndex, int textWidth, int visibleWidth) {
+        int overflow = textWidth - visibleWidth;
+        if (overflow <= 0) {
+            return 0;
+        }
+        long pause = 800L;
+        long travel = Math.max(700L, overflow * 35L);
+        long cycle = pause + travel + pause + travel;
+        long elapsed = Math.floorMod(Util.getMillis() + entryIndex * 275L, cycle);
+        if (elapsed < pause) {
+            return 0;
+        }
+        if (elapsed < pause + travel) {
+            return (int) ((elapsed - pause) * overflow / travel);
+        }
+        if (elapsed < pause + travel + pause) {
+            return overflow;
+        }
+        return overflow - (int) ((elapsed - pause - travel - pause) * overflow / travel);
     }
 
     private int dropdownX() {
