@@ -2,5 +2,8 @@
   "item.sophisticated_matcher.nbt_matcher": "NBT Matcher",
   "container.sophisticated_matcher.matcher": "NBT Matcher",
   "gui.sophisticated_matcher.save": "Save",
-  "gui.sophisticated_matcher.component": "Component"
+  "gui.sophisticated_matcher.component": "Filter Entry",
+  "gui.sophisticated_matcher.select": "Click to select NBT",
+  "tooltip.sophisticated_matcher.selected": "Filter NBT: %s",
+  "tooltip.sophisticated_matcher.empty": "No filter NBT saved"
 }

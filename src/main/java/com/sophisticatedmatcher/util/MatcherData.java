@@ -58,7 +58,7 @@ public final class MatcherData {
         CompoundTag data = root.getCompound(DATA_KEY);
         data.putString(COMPONENT_KEY, selected.id());
         encodeComponent(selected.type(), selected.value()).ifPresent(value -> data.put(VALUE_KEY, value.copy()));
-        encodePreview(preview, registries).ifPresent(value -> data.put(PREVIEW_KEY, value));
+        data.remove(PREVIEW_KEY);
         root.put(DATA_KEY, data);
         matcher.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, CustomData.of(root));
     }
@@ -77,13 +77,35 @@ public final class MatcherData {
         if (selected.isEmpty()) {
             return -1;
         }
-        List<ComponentEntry> entries = entries(preview);
-        for (int i = 0; i < entries.size(); i++) {
-            if (selected.equals(entries.get(i).id())) {
+        List<ComponentEntry> componentEntries = entries(preview);
+        for (int i = 0; i < componentEntries.size(); i++) {
+            if (selected.equals(componentEntries.get(i).id())) {
                 return i;
             }
         }
         return -1;
+    }
+    public static void clearLegacyPreview(ItemStack matcher) {
+        CompoundTag root = getCustomData(matcher);
+        CompoundTag data = root.getCompound(DATA_KEY);
+        if (!data.contains(PREVIEW_KEY)) {
+            return;
+        }
+        data.remove(PREVIEW_KEY);
+        root.put(DATA_KEY, data);
+        matcher.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, CustomData.of(root));
+    }
+
+    public static ComponentEntry selectedEntry(ItemStack matcher) {
+        CompoundTag data = getData(matcher);
+        String key = data.getString(COMPONENT_KEY);
+        Tag value = data.get(VALUE_KEY);
+        if (key.isEmpty() || value == null) {
+            return null;
+        }
+        DataComponentType<?> type = BuiltInRegistries.DATA_COMPONENT_TYPE
+                .getOptional(ResourceLocation.parse(key)).orElse(null);
+        return new ComponentEntry(key, key + " = " + value, type, value.copy());
     }
 
     public static boolean matches(ItemStack matcher, ItemStack target) {
@@ -121,10 +143,6 @@ public final class MatcherData {
 
     private static CompoundTag getCustomData(ItemStack matcher) {
         return matcher.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-    }
-
-    private static Optional<Tag> encodePreview(ItemStack preview, HolderLookup.Provider registries) {
-        return ItemStack.CODEC.encodeStart(RegistryOps.create(NbtOps.INSTANCE, registries), preview).result();
     }
 
     @SuppressWarnings("unchecked")
