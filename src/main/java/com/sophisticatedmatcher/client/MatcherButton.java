@@ -20,7 +20,7 @@ public final class MatcherButton extends Button {
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         ResourceLocation texture = isFocused() && isHovered() ? PRESSED : (isHovered() ? HOVER : NORMAL);
         graphics.blit(texture, getX(), getY(), 0, 0, width, height, 60, 16);
-        int color = active ? 0xFFFFFFFF : 0xFF888888;
-        graphics.drawCenteredString(Minecraft.getInstance().font, getMessage(), getX() + width / 2, getY() + 4, color);
+        graphics.drawCenteredString(Minecraft.getInstance().font, getMessage(),
+                getX() + width / 2, getY() + 4, 0xFFFFFFFF);
     }
 }
