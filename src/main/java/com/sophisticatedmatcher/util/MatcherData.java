@@ -9,7 +9,7 @@ import net.minecraft.core.component.TypedDataComponent;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.HolderLookup;
@@ -37,7 +37,7 @@ public final class MatcherData {
             return entries;
         }
         for (TypedDataComponent<?> component : stack.getComponents()) {
-            ResourceLocation id = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(component.type());
+            Identifier id = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(component.type());
             if (id == null) {
                 continue;
             }
@@ -55,7 +55,7 @@ public final class MatcherData {
 
         ComponentEntry selected = entries.get(entryIndex);
         CompoundTag root = getCustomData(matcher);
-        CompoundTag data = root.getCompound(DATA_KEY);
+        CompoundTag data = root.getCompoundOrEmpty(DATA_KEY);
         data.putString(COMPONENT_KEY, selected.id());
         encodeComponent(selected.type(), selected.value()).ifPresent(value -> data.put(VALUE_KEY, value.copy()));
         data.remove(PREVIEW_KEY);
@@ -73,7 +73,7 @@ public final class MatcherData {
     }
 
     public static int selectedIndex(ItemStack matcher, ItemStack preview) {
-        String selected = getData(matcher).getString(COMPONENT_KEY);
+        String selected = getData(matcher).getStringOr(COMPONENT_KEY, "");
         if (selected.isEmpty()) {
             return -1;
         }
@@ -87,7 +87,7 @@ public final class MatcherData {
     }
     public static void clearLegacyPreview(ItemStack matcher) {
         CompoundTag root = getCustomData(matcher);
-        CompoundTag data = root.getCompound(DATA_KEY);
+        CompoundTag data = root.getCompoundOrEmpty(DATA_KEY);
         if (!data.contains(PREVIEW_KEY)) {
             return;
         }
@@ -98,13 +98,13 @@ public final class MatcherData {
 
     public static ComponentEntry selectedEntry(ItemStack matcher) {
         CompoundTag data = getData(matcher);
-        String key = data.getString(COMPONENT_KEY);
+        String key = data.getStringOr(COMPONENT_KEY, "");
         Tag value = data.get(VALUE_KEY);
         if (key.isEmpty() || value == null) {
             return null;
         }
         DataComponentType<?> type = BuiltInRegistries.DATA_COMPONENT_TYPE
-                .getOptional(ResourceLocation.parse(key)).orElse(null);
+                .getOptional(Identifier.parse(key)).orElse(null);
         return new ComponentEntry(key, key + " = " + value, type, value.copy());
     }
 
@@ -124,12 +124,12 @@ public final class MatcherData {
 
     private static boolean matches(ItemStack matcher, DataComponentMap components) {
         CompoundTag data = getData(matcher);
-        String componentId = data.getString(COMPONENT_KEY);
+        String componentId = data.getStringOr(COMPONENT_KEY, "");
         Tag expected = data.get(VALUE_KEY);
         if (componentId.isEmpty() || expected == null) {
             return false;
         }
-        DataComponentType<?> type = BuiltInRegistries.DATA_COMPONENT_TYPE.getOptional(ResourceLocation.parse(componentId)).orElse(null);
+        DataComponentType<?> type = BuiltInRegistries.DATA_COMPONENT_TYPE.getOptional(Identifier.parse(componentId)).orElse(null);
         if (type == null) {
             return false;
         }
@@ -138,7 +138,7 @@ public final class MatcherData {
     }
 
     private static CompoundTag getData(ItemStack matcher) {
-        return getCustomData(matcher).getCompound(DATA_KEY);
+        return getCustomData(matcher).getCompoundOrEmpty(DATA_KEY);
     }
 
     private static CompoundTag getCustomData(ItemStack matcher) {

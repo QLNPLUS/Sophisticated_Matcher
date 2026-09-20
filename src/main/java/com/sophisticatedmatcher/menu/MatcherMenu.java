@@ -9,7 +9,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -85,8 +85,8 @@ public final class MatcherMenu extends AbstractContainerMenu {
     }
 
     @Override
-    public void clicked(int slotId, int button, ClickType clickType, Player player) {
-        if (slotId == PREVIEW_SLOT && clickType == ClickType.PICKUP) {
+    public void clicked(int slotId, int button, ContainerInput clickType, Player player) {
+        if (slotId == PREVIEW_SLOT && clickType == ContainerInput.PICKUP) {
             ItemStack carried = getCarried();
             if (!carried.isEmpty() && !NbtMatcherItem.isMatcher(carried)) {
                 preview.setItem(0, carried.copyWithCount(1));

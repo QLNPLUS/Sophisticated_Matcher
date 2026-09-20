@@ -3,19 +3,22 @@ package com.sophisticatedmatcher.client;
 import com.sophisticatedmatcher.SophisticatedMatcherMod;
 import com.sophisticatedmatcher.menu.MatcherMenu;
 import com.sophisticatedmatcher.util.MatcherData;
-import net.minecraft.Util;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.world.entity.player.Inventory;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
 public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
-    private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(SophisticatedMatcherMod.MOD_ID, "textures/gui/background.png");
-    private static final ResourceLocation DROPDOWN = ResourceLocation.fromNamespaceAndPath(SophisticatedMatcherMod.MOD_ID, "textures/gui/dropdown.png");
+    private static final Identifier BACKGROUND = Identifier.fromNamespaceAndPath(SophisticatedMatcherMod.MOD_ID, "textures/gui/background.png");
+    private static final Identifier DROPDOWN = Identifier.fromNamespaceAndPath(SophisticatedMatcherMod.MOD_ID, "textures/gui/dropdown.png");
     private static final int GUI_WIDTH = 176;
     private static final int GUI_HEIGHT = 166;
     private static final int SELECTOR_X = 50;
@@ -33,9 +36,7 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     private MatcherButton saveButton;
 
     public MatcherScreen(MatcherMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
-        imageWidth = GUI_WIDTH;
-        imageHeight = GUI_HEIGHT;
+        super(menu, inventory, title, GUI_WIDTH, GUI_HEIGHT);
     }
 
     @Override
@@ -54,17 +55,31 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     }
 
     @Override
-    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
-        graphics.blit(BACKGROUND, leftPos, topPos, 0, 0, GUI_WIDTH, GUI_HEIGHT, GUI_WIDTH, GUI_HEIGHT);
+    public void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND, leftPos, topPos,
+                0, 0, GUI_WIDTH, GUI_HEIGHT, GUI_WIDTH, GUI_HEIGHT);
+        graphics.nextStratum();
+        MatcherLayoutDebug.applyMenuLayout(menu);
+        if (saveButton != null) {
+            saveButton.setX(layoutX(MatcherLayoutDebug.Widget.SAVE_BUTTON, 108) + leftPos);
+            saveButton.setY(layoutY(MatcherLayoutDebug.Widget.SAVE_BUTTON, 48) + topPos);
+            saveButton.active = menu.selectedIndex() >= 0 && !menu.previewStack().isEmpty();
+        }
+        super.extractContents(graphics, mouseX, mouseY, partialTick);
+        if (dropdownOpen) {
+            graphics.nextStratum();
+            renderDropdown(graphics);
+        }
+        renderDebugOverlay(graphics);
     }
 
     @Override
-    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(font, Component.translatable("container." + SophisticatedMatcherMod.MOD_ID + ".matcher"),
+    protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        graphics.text(font, Component.translatable("container." + SophisticatedMatcherMod.MOD_ID + ".matcher"),
                 layoutX(MatcherLayoutDebug.Widget.TITLE, 8),
-                layoutY(MatcherLayoutDebug.Widget.TITLE, 6), 0x404040, false);
+                layoutY(MatcherLayoutDebug.Widget.TITLE, 6), 0xFF404040, false);
         if (!dropdownOpen) {
-            graphics.drawString(font, font.plainSubstrByWidth(selectorSummary(), SELECTOR_WIDTH - 10),
+            graphics.text(font, font.plainSubstrByWidth(selectorSummary(), SELECTOR_WIDTH - 10),
                     layoutX(MatcherLayoutDebug.Widget.SELECTOR, SELECTOR_X) + 5,
                     layoutY(MatcherLayoutDebug.Widget.SELECTOR, SELECTOR_Y) + 5,
                     0xFFFFFFFF, false);
@@ -72,10 +87,12 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
         if (dropdownOpen) {
             if (isInsideDropdown(mouseX, mouseY)) {
-                if (button == 0) {
+                if (event.button() == 0) {
                     int row = (int) ((mouseY - dropdownY() - DROPDOWN_PADDING) / ROW_HEIGHT);
                     int index = scrollOffset + row;
                     if (row >= 0 && row < visibleRows() && index < menu.entries().size()) {
@@ -89,7 +106,7 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
             dropdownOpen = false;
         }
 
-        if (button == 0 && isInsideSelector(mouseX, mouseY)) {
+        if (event.button() == 0 && isInsideSelector(mouseX, mouseY)) {
             if (menu.previewStack().isEmpty() || menu.entries().isEmpty()) {
                 dropdownOpen = false;
                 return true;
@@ -98,7 +115,7 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
             scrollOffset = Math.min(scrollOffset, maxScrollOffset());
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
@@ -113,29 +130,10 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
-    @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        MatcherLayoutDebug.applyMenuLayout(menu);
-        if (saveButton != null) {
-            saveButton.setX(layoutX(MatcherLayoutDebug.Widget.SAVE_BUTTON, 108) + leftPos);
-            saveButton.setY(layoutY(MatcherLayoutDebug.Widget.SAVE_BUTTON, 48) + topPos);
-            saveButton.active = menu.selectedIndex() >= 0 && !menu.previewStack().isEmpty();
-        }
-        super.render(graphics, mouseX, mouseY, partialTick);
-        if (dropdownOpen) {
-            renderDropdown(graphics);
-        } else {
-            renderTooltip(graphics, mouseX, mouseY);
-        }
-        renderDebugOverlay(graphics);
-    }
-
-    private void renderDropdown(GuiGraphics graphics) {
+    private void renderDropdown(GuiGraphicsExtractor graphics) {
         int x = dropdownX();
         int y = dropdownY();
         int height = dropdownHeight();
-        graphics.pose().pushPose();
-        graphics.pose().translate(0, 0, 300);
         renderDropdownBackground(graphics, x, y, height);
 
         List<MatcherData.ComponentEntry> entries = menu.entries();
@@ -157,22 +155,20 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
             int visibleWidth = textRight - textX;
             int textWidth = font.width(entry.text());
             int offset = marqueeOffset(index, textWidth, visibleWidth);
-            graphics.drawString(font, entry.text(), textX - offset, rowY, 0xFFFFFFFF, false);
+            graphics.text(font, entry.text(), textX - offset, rowY, 0xFFFFFFFF, false);
         }
         graphics.disableScissor();
-        graphics.flush();
-        graphics.pose().popPose();
     }
 
-    private void renderDropdownBackground(GuiGraphics graphics, int x, int y, int height) {
-        graphics.blit(DROPDOWN, x, y, 0, 0, DROPDOWN_WIDTH, DROPDOWN_EDGE_HEIGHT,
+    private void renderDropdownBackground(GuiGraphicsExtractor graphics, int x, int y, int height) {
+        graphics.blit(RenderPipelines.GUI_TEXTURED, DROPDOWN, x, y, 0, 0, DROPDOWN_WIDTH, DROPDOWN_EDGE_HEIGHT,
                 DROPDOWN_WIDTH, DROPDOWN_TEXTURE_HEIGHT);
         int middleHeight = Math.max(0, height - DROPDOWN_EDGE_HEIGHT * 2);
         if (middleHeight > 0) {
-            graphics.blit(DROPDOWN, x, y + DROPDOWN_EDGE_HEIGHT, 0, DROPDOWN_EDGE_HEIGHT,
+            graphics.blit(RenderPipelines.GUI_TEXTURED, DROPDOWN, x, y + DROPDOWN_EDGE_HEIGHT, 0, DROPDOWN_EDGE_HEIGHT,
                     DROPDOWN_WIDTH, middleHeight, DROPDOWN_WIDTH, DROPDOWN_TEXTURE_HEIGHT);
         }
-        graphics.blit(DROPDOWN, x, y + height - DROPDOWN_EDGE_HEIGHT, 0,
+        graphics.blit(RenderPipelines.GUI_TEXTURED, DROPDOWN, x, y + height - DROPDOWN_EDGE_HEIGHT, 0,
                 DROPDOWN_TEXTURE_HEIGHT - DROPDOWN_EDGE_HEIGHT, DROPDOWN_WIDTH,
                 DROPDOWN_EDGE_HEIGHT, DROPDOWN_WIDTH, DROPDOWN_TEXTURE_HEIGHT);
     }
@@ -252,18 +248,15 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
         return MatcherLayoutDebug.y(widget, normalY);
     }
 
-    private void renderDebugOverlay(GuiGraphics graphics) {
+    private void renderDebugOverlay(GuiGraphicsExtractor graphics) {
         if (!MatcherLayoutDebug.isEnabled()) {
             return;
         }
+        graphics.nextStratum();
         MatcherLayoutDebug.Widget widget = MatcherLayoutDebug.selected();
         DebugBounds bounds = debugBounds(widget);
-        graphics.pose().pushPose();
-        graphics.pose().translate(0, 0, 900);
         MatcherLayoutDebug.renderOverlay(graphics, font, bounds.x(), bounds.y(),
                 bounds.width(), bounds.height());
-        graphics.flush();
-        graphics.pose().popPose();
     }
 
     private DebugBounds debugBounds(MatcherLayoutDebug.Widget widget) {
@@ -274,7 +267,7 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
                     topPos + layoutY(widget, 20), 20, 20);
             case SELECTOR_LABEL -> new DebugBounds(leftPos + layoutX(widget, SELECTOR_X),
                     topPos + layoutY(widget, 10),
-                    font.width(Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".component")),
+                    0,
                     font.lineHeight);
             case SELECTOR -> new DebugBounds(leftPos + layoutX(widget, SELECTOR_X),
                     topPos + layoutY(widget, SELECTOR_Y), SELECTOR_WIDTH, SELECTOR_HEIGHT);
@@ -292,32 +285,32 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_F8) {
+    public boolean keyPressed(KeyEvent event) {
+        if (event.key() == GLFW.GLFW_KEY_F8) {
             if (!MatcherLayoutDebug.isConfiguredEnabled()) {
-                return super.keyPressed(keyCode, scanCode, modifiers);
+                return super.keyPressed(event);
             }
             MatcherLayoutDebug.toggle();
             return true;
         }
         if (MatcherLayoutDebug.isEnabled()) {
-            if (keyCode == GLFW.GLFW_KEY_TAB) {
-                MatcherLayoutDebug.selectNext(hasShiftDown());
+            if (event.key() == GLFW.GLFW_KEY_TAB) {
+                MatcherLayoutDebug.selectNext(event.hasShiftDown());
                 return true;
             }
             int dx = 0;
             int dy = 0;
-            if (keyCode == GLFW.GLFW_KEY_LEFT) dx = -1;
-            if (keyCode == GLFW.GLFW_KEY_RIGHT) dx = 1;
-            if (keyCode == GLFW.GLFW_KEY_UP) dy = -1;
-            if (keyCode == GLFW.GLFW_KEY_DOWN) dy = 1;
+            if (event.key() == GLFW.GLFW_KEY_LEFT) dx = -1;
+            if (event.key() == GLFW.GLFW_KEY_RIGHT) dx = 1;
+            if (event.key() == GLFW.GLFW_KEY_UP) dy = -1;
+            if (event.key() == GLFW.GLFW_KEY_DOWN) dy = 1;
             if (dx != 0 || dy != 0) {
-                int step = hasAltDown() ? 1 : 5;
+                int step = event.hasAltDown() ? 1 : 5;
                 MatcherLayoutDebug.moveSelected(dx * step, dy * step);
                 MatcherLayoutDebug.applyMenuLayout(menu);
                 return true;
             }
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 }
