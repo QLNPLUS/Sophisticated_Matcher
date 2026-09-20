@@ -6,10 +6,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sophisticatedmatcher.MatcherConfig;
+import com.sophisticatedmatcher.compat.MatcherSlotPositionAccess;
+import com.sophisticatedmatcher.menu.MatcherMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.Slot;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -36,7 +39,9 @@ public final class MatcherLayoutDebug {
         SELECTOR_LABEL("Selector label"),
         SELECTOR("Selector"),
         DROPDOWN("Dropdown"),
-        SAVE_BUTTON("Save button");
+        SAVE_BUTTON("Save button"),
+        INVENTORY("Player inventory"),
+        HOTBAR("Hotbar");
 
         private final String label;
 
@@ -103,6 +108,24 @@ public final class MatcherLayoutDebug {
         save();
     }
 
+    public static void applyMenuLayout(MatcherMenu menu) {
+        if (menu.slots.size() < 37) {
+            return;
+        }
+        applySlot(menu.slots.get(0), PREVIEW_SLOT_NORMAL_X, PREVIEW_SLOT_NORMAL_Y,
+                Widget.PREVIEW_SLOT);
+        for (int index = 1; index <= 27; index++) {
+            int column = (index - 1) % 9;
+            int row = (index - 1) / 9;
+            applySlot(menu.slots.get(index), 8 + column * 18, 84 + row * 18,
+                    Widget.INVENTORY);
+        }
+        for (int index = 28; index < 37; index++) {
+            int column = index - 28;
+            applySlot(menu.slots.get(index), 8 + column * 18, 142, Widget.HOTBAR);
+        }
+    }
+
     public static void renderOverlay(GuiGraphics graphics, Font font,
                                      int x, int y, int width, int height) {
         int right = x + Math.max(1, width);
@@ -137,6 +160,15 @@ public final class MatcherLayoutDebug {
             positions.put(widget, new Position(0, 0));
         }
         return positions;
+    }
+
+    private static final int PREVIEW_SLOT_NORMAL_X = 21;
+    private static final int PREVIEW_SLOT_NORMAL_Y = 20;
+
+    private static void applySlot(Slot slot, int normalX, int normalY, Widget widget) {
+        if (slot instanceof MatcherSlotPositionAccess access) {
+            access.sophisticatedMatcher$setPosition(x(widget, normalX), y(widget, normalY));
+        }
     }
 
     private static int clamp(int value) {

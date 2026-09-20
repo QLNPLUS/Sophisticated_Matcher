@@ -6,6 +6,9 @@
   "mixins": [
     "SophisticatedFilterLogicMixin"
   ],
+  "client": [
+    "MatcherSlotPositionMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }
