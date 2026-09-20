@@ -67,7 +67,7 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
             graphics.drawString(font, font.plainSubstrByWidth(selectorSummary(), SELECTOR_WIDTH - 10),
                     layoutX(MatcherLayoutDebug.Widget.SELECTOR, SELECTOR_X) + 5,
                     layoutY(MatcherLayoutDebug.Widget.SELECTOR, SELECTOR_Y) + 5,
-                    0x404040, false);
+                    0xFFFFFFFF, false);
         }
     }
 
@@ -154,10 +154,6 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
             }
             MatcherData.ComponentEntry entry = entries.get(index);
             int rowY = textTop + row * ROW_HEIGHT;
-            if (index == menu.selectedIndex()) {
-                graphics.fill(textX - 2, rowY - 1, textRight, rowY + font.lineHeight + 1,
-                        0x55333333);
-            }
             int visibleWidth = textRight - textX;
             int textWidth = font.width(entry.text());
             int offset = marqueeOffset(index, textWidth, visibleWidth);

@@ -155,9 +155,14 @@ public final class MatcherLayoutDebug {
 
     private static EnumMap<Widget, Position> defaultPositions() {
         EnumMap<Widget, Position> positions = new EnumMap<>(Widget.class);
-        for (Widget widget : Widget.values()) {
-            positions.put(widget, new Position(0, 0));
-        }
+        positions.put(Widget.TITLE, new Position(0, 0));
+        positions.put(Widget.PREVIEW_SLOT, new Position(-1, 13));
+        positions.put(Widget.SELECTOR_LABEL, new Position(0, 10));
+        positions.put(Widget.SELECTOR, new Position(0, 11));
+        positions.put(Widget.DROPDOWN, new Position(0, 11));
+        positions.put(Widget.SAVE_BUTTON, new Position(0, 11));
+        positions.put(Widget.INVENTORY, new Position(0, 0));
+        positions.put(Widget.HOTBAR, new Position(0, 0));
         return positions;
     }
 

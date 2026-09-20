@@ -1,0 +1,121 @@
+name: Publish Forge 1.20.1 to CurseForge
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build
+        required: true
+        type: string
+        default: forge-1.20.1
+      version:
+        description: CurseForge version to publish
+        required: true
+        type: string
+        default: 1.0.0
+
+permissions:
+  contents: read
+
+concurrency:
+  group: curseforge-forge-1.20.1-${{ github.event.release.tag_name || inputs.version || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish-forge-1-20-1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.ref || github.ref }}
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Prepare release version
+        env:
+          RAW_VERSION: ${{ github.event.release.tag_name || inputs.version || github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(printf '%s' "$RAW_VERSION" | sed 's/^v//')"
+          test -n "$version"
+          echo "CURSEFORGE_VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Validate CurseForge configuration
+        env:
+          CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CURSEFORGE_PROJECT_ID"
+          test -n "$CURSEFORGE_TOKEN"
+
+      - name: Download Sophisticated Core build dependency
+        env:
+          CORE_DOWNLOAD_URL: https://www.curseforge.com/api/v1/mods/618298/files/8839328/download
+          CORE_FILE: sophisticatedcore-1.20.1-1.5.1.2335.jar
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p libs
+          curl --fail --location --retry 3 "$CORE_DOWNLOAD_URL" -o "libs/$CORE_FILE"
+          test -s "libs/$CORE_FILE"
+          unzip -t "libs/$CORE_FILE" >/dev/null
+
+      - name: Build mod
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew build --no-daemon -Psophisticated_core_version=1.20.1-1.5.1.2335
+
+      - name: Verify release artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          find build/libs -maxdepth 1 -type f -name '*.jar' -print
+          expected="sophisticated-matcher-forge-1.20.1-$CURSEFORGE_VERSION.jar"
+          test -f "build/libs/$expected"
+          echo "CURSEFORGE_FILE=build/libs/$expected" >> "$GITHUB_ENV"
+
+      - name: Prepare current changelog
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$CURSEFORGE_VERSION"
+          awk -v version="$version" '
+            /^##[[:space:]]+/ {
+              heading = $2
+              gsub(/^\[/, "", heading)
+              gsub(/\].*$/, "", heading)
+              if (found && heading != version) exit
+              if (heading == version) found = 1
+            }
+            found { print }
+          ' CHANGELOG.md > build/curseforge-changelog.md
+          test -s build/curseforge-changelog.md
+
+      - name: Publish to CurseForge
+        uses: Kira-NT/mc-publish@v3
+        with:
+          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: ${{ env.CURSEFORGE_FILE }}
+          name: sophisticated-matcher-forge-1.20.1-${{ env.CURSEFORGE_VERSION }}
+          version: ${{ env.CURSEFORGE_VERSION }}
+          version-type: release
+          changelog-file: build/curseforge-changelog.md
+          loaders: forge
+          game-versions: 1.20.1
+          java: 17
