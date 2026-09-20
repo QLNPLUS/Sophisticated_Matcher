@@ -1,0 +1,121 @@
+# Publishes the NeoForge 26.1.2 artifact after an explicit release or manual dispatch.
+name: Publish NeoForge 26.1.2 to CurseForge
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build
+        required: true
+        type: string
+        default: neoforge-26.1.2
+      version:
+        description: CurseForge version to publish
+        required: true
+        type: string
+        default: 1.1.0
+
+permissions:
+  contents: read
+
+concurrency:
+  group: curseforge-neoforge-26.1.2-${{ github.event.release.tag_name || inputs.version || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish-neoforge-26-1-2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.ref || github.ref }}
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Prepare release version
+        env:
+          RAW_VERSION: ${{ github.event.release.tag_name || inputs.version || github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(printf '%s' "$RAW_VERSION" | sed 's/^v//')"
+          test -n "$version"
+          echo "CURSEFORGE_VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Validate CurseForge configuration
+        env:
+          CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CURSEFORGE_PROJECT_ID"
+          test -n "$CURSEFORGE_TOKEN"
+
+      - name: Download Sophisticated Core build dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p libs
+          curl --fail --location --retry 3 \
+            "https://api.modrinth.com/maven/maven.modrinth/sophisticated-core/26.1.2-1.5.0.2334/sophisticated-core-26.1.2-1.5.0.2334.jar" \
+            -o "libs/sophisticatedcore-26.1.2-1.5.0.2334.jar"
+          test -s "libs/sophisticatedcore-26.1.2-1.5.0.2334.jar"
+          unzip -t "libs/sophisticatedcore-26.1.2-1.5.0.2334.jar" >/dev/null
+
+      - name: Build mod
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew build --no-daemon
+
+      - name: Verify release artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          find build/libs -maxdepth 1 -type f -name '*.jar' -print
+          expected="sophisticated_matcher-neoforge-26.1.2-$CURSEFORGE_VERSION.jar"
+          test -f "build/libs/$expected"
+          echo "CURSEFORGE_FILE=build/libs/$expected" >> "$GITHUB_ENV"
+
+      - name: Prepare current changelog
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$CURSEFORGE_VERSION"
+          awk -v version="$version" '
+            /^##[[:space:]]+/ {
+              heading = $2
+              gsub(/^\[/, "", heading)
+              gsub(/\].*$/, "", heading)
+              if (found && heading != version) exit
+              if (heading == version) found = 1
+            }
+            found { print }
+          ' CHANGELOG.md > build/curseforge-changelog.md
+          test -s build/curseforge-changelog.md
+
+      - name: Publish to CurseForge
+        uses: Kira-NT/mc-publish@v3
+        with:
+          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: ${{ env.CURSEFORGE_FILE }}
+          name: sophisticated_matcher-neoforge-26.1.2-${{ env.CURSEFORGE_VERSION }}
+          version: ${{ env.CURSEFORGE_VERSION }}
+          version-type: release
+          changelog-file: build/curseforge-changelog.md
+          loaders: neoforge
+          game-versions: 26.1.2
+          java: 25
