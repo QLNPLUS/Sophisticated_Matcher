@@ -102,7 +102,7 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (dropdownOpen && isInsideDropdown(mouseX, mouseY)) {
             if (menu.entries().size() > MAX_VISIBLE_ROWS) {
                 scrollOffset = Math.max(0, Math.min(maxScrollOffset(),
@@ -110,7 +110,7 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
             }
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, scrollY);
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override
