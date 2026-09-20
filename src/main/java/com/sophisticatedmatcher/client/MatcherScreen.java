@@ -16,8 +16,6 @@ import java.util.List;
 public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     private static final ResourceLocation BACKGROUND = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/background.png");
     private static final ResourceLocation DROPDOWN = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/dropdown.png");
-    private static final ResourceLocation SCROLL_TRACK = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/scroll_track.png");
-    private static final ResourceLocation SCROLL_KNOB = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/scroll_knob.png");
     private static final int GUI_WIDTH = 176;
     private static final int GUI_HEIGHT = 166;
     private static final int SELECTOR_X = 50;
@@ -30,9 +28,6 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     private static final int DROPDOWN_PADDING = 6;
     private static final int ROW_HEIGHT = 12;
     private static final int MAX_VISIBLE_ROWS = 6;
-    private static final int SCROLLBAR_WIDTH = 8;
-    private static final int SCROLLBAR_GAP = 3;
-    private static final int SCROLL_KNOB_TEXTURE_HEIGHT = 8;
     private int scrollOffset;
     private boolean dropdownOpen;
     private MatcherButton saveButton;
@@ -68,9 +63,6 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
         graphics.drawString(font, Component.translatable("container." + SophisticatedMatcherMod.MOD_ID + ".matcher"),
                 layoutX(MatcherLayoutDebug.Widget.TITLE, 8),
                 layoutY(MatcherLayoutDebug.Widget.TITLE, 6), 0x404040, false);
-        graphics.drawString(font, Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".component"),
-                layoutX(MatcherLayoutDebug.Widget.SELECTOR_LABEL, SELECTOR_X),
-                layoutY(MatcherLayoutDebug.Widget.SELECTOR_LABEL, 10), 0x404040, false);
         if (!dropdownOpen) {
             graphics.drawString(font, font.plainSubstrByWidth(selectorSummary(), SELECTOR_WIDTH - 10),
                     layoutX(MatcherLayoutDebug.Widget.SELECTOR, SELECTOR_X) + 5,
@@ -149,10 +141,9 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
         List<MatcherData.ComponentEntry> entries = menu.entries();
         scrollOffset = Math.min(scrollOffset, maxScrollOffset());
         int rows = visibleRows();
-        boolean hasScrollbar = entries.size() > MAX_VISIBLE_ROWS;
         int textX = x + 5;
         int textRight = x + DROPDOWN_WIDTH
-                - (hasScrollbar ? SCROLLBAR_WIDTH + SCROLLBAR_GAP : DROPDOWN_PADDING);
+                - DROPDOWN_PADDING;
         int textTop = y + DROPDOWN_PADDING;
         int textBottom = textTop + rows * ROW_HEIGHT;
         graphics.enableScissor(textX, textTop, textRight, textBottom);
@@ -173,19 +164,6 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
             graphics.drawString(font, entry.text(), textX - offset, rowY, 0xFFFFFFFF, false);
         }
         graphics.disableScissor();
-        if (hasScrollbar) {
-            int trackX = x + DROPDOWN_WIDTH - SCROLLBAR_WIDTH - 2;
-            int trackY = y + DROPDOWN_PADDING;
-            int trackHeight = rows * ROW_HEIGHT;
-            graphics.blit(SCROLL_TRACK, trackX, trackY, 0, 0, SCROLLBAR_WIDTH, trackHeight,
-                    SCROLLBAR_WIDTH, 16);
-            int knobHeight = Math.max(8, trackHeight * rows / entries.size());
-            int knobRange = Math.max(0, trackHeight - knobHeight);
-            int knobY = trackY + (maxScrollOffset() == 0 ? 0
-                    : knobRange * scrollOffset / maxScrollOffset());
-            graphics.blit(SCROLL_KNOB, trackX, knobY, 0, 0, SCROLLBAR_WIDTH, knobHeight,
-                    SCROLLBAR_WIDTH, SCROLL_KNOB_TEXTURE_HEIGHT);
-        }
         graphics.flush();
         graphics.pose().popPose();
     }
@@ -247,7 +225,7 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
             return 0;
         }
         long pause = 800L;
-        long travel = Math.max(700L, overflow * 35L);
+        long travel = Math.max(1200L, overflow * 70L);
         long cycle = pause + travel + pause + travel;
         long elapsed = Math.floorMod(Util.getMillis() + entryIndex * 275L, cycle);
         if (elapsed < pause) {
