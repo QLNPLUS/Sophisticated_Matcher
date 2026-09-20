@@ -1,3 +1,4 @@
+# Publishes only after an explicit release or manual workflow dispatch.
 name: Publish Forge 1.20.1 to CurseForge
 
 on:
