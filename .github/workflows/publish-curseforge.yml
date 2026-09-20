@@ -68,7 +68,7 @@ jobs:
           set -euo pipefail
           mkdir -p libs
           curl --fail --location --retry 3 \
-            "https://api.modrinth.com/maven/maven.modrinth/sophisticated-core/1.21.1-1.5.1.2341/sophisticated-core-1.21.1-1.5.1.2341.jar" \
+            "https://www.curseforge.com/api/v1/mods/618298/files/8838842/download" \
             -o "libs/sophisticatedcore-1.21.1-1.5.1.2341.jar"
           test -s "libs/sophisticatedcore-1.21.1-1.5.1.2341.jar"
           unzip -t "libs/sophisticatedcore-1.21.1-1.5.1.2341.jar" >/dev/null
