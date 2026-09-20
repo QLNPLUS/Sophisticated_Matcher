@@ -1,10 +1,10 @@
 {
-  "item.sophisticated_matcher.nbt_matcher": "NBT 匹配器",
-  "container.sophisticated_matcher.matcher": "NBT 匹配器",
+  "item.sophisticated_matcher.nbt_matcher": "组件匹配器",
+  "container.sophisticated_matcher.matcher": "组件匹配器",
   "gui.sophisticated_matcher.save": "保存",
   "gui.sophisticated_matcher.component": "筛选条目",
-  "gui.sophisticated_matcher.select": "点击选择 NBT",
-  "gui.sophisticated_matcher.no_nbt": "无NBT",
-  "tooltip.sophisticated_matcher.selected": "筛选 NBT: %s",
-  "tooltip.sophisticated_matcher.empty": "尚未保存筛选 NBT"
+  "gui.sophisticated_matcher.select": "点击选择组件",
+  "gui.sophisticated_matcher.no_nbt": "无组件",
+  "tooltip.sophisticated_matcher.selected": "筛选组件: %s",
+  "tooltip.sophisticated_matcher.empty": "尚未保存筛选组件"
 }

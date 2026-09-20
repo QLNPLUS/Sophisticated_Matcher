@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 - 2026-09-20
+
+- Fixed the matcher item model for Minecraft 26.1.2.
+- Added the matcher to the Sophisticated Core creative tab.
+- Renamed the high-version UI and tooltip terminology from NBT to component.
+- Updated release metadata to version 1.1.0.
+
 ## 1.0.0 - 2026-09-20
 
 - Initial Forge 1.20.1 release.
