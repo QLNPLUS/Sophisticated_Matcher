@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0 - 2026-09-20
+
+- Added the matcher to the Sophisticated Core creative tab when that tab is available.
+- Updated the 1.20.1 Core build dependency to 1.5.1.2335 while keeping compatibility above the previous minimum.
+- Fixed the matcher release metadata and publishing version.
+
 ## 1.0.0 - 2026-09-20
 
 - Initial Forge 1.20.1 release.
