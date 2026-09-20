@@ -49,33 +49,33 @@ public final class MatcherData {
                 : new CompoundTag();
         data.putString(NBT_KEY, selected.id());
         data.put(VALUE_KEY, selected.value().copy());
-        CompoundTag previewTag = new CompoundTag();
-        preview.save(previewTag);
-        data.put(PREVIEW_KEY, previewTag);
+        data.remove(PREVIEW_KEY);
         root.put(DATA_KEY, data);
         matcher.setTag(root);
     }
 
-    public static ItemStack preview(ItemStack matcher) {
-        CompoundTag data = getData(matcher);
-        if (!data.contains(PREVIEW_KEY, Tag.TAG_COMPOUND)) {
-            return ItemStack.EMPTY;
+    public static void clearLegacyPreview(ItemStack matcher) {
+        CompoundTag root = matcher.getTag();
+        if (root == null || !root.contains(DATA_KEY, Tag.TAG_COMPOUND)) {
+            return;
         }
-        return ItemStack.of(data.getCompound(PREVIEW_KEY));
+        CompoundTag data = root.getCompound(DATA_KEY);
+        if (!data.contains(PREVIEW_KEY)) {
+            return;
+        }
+        data.remove(PREVIEW_KEY);
+        root.put(DATA_KEY, data);
+        matcher.setTag(root);
     }
 
-    public static int selectedIndex(ItemStack matcher, ItemStack preview) {
-        String selected = getData(matcher).getString(NBT_KEY);
-        if (selected.isEmpty()) {
-            return -1;
+    public static ComponentEntry selectedEntry(ItemStack matcher) {
+        CompoundTag data = getData(matcher);
+        String key = data.getString(NBT_KEY);
+        Tag value = data.get(VALUE_KEY);
+        if (key.isEmpty() || value == null) {
+            return null;
         }
-        List<ComponentEntry> entries = entries(preview);
-        for (int i = 0; i < entries.size(); i++) {
-            if (selected.equals(entries.get(i).id())) {
-                return i;
-            }
-        }
-        return -1;
+        return new ComponentEntry(key, key + " = " + value, value.copy());
     }
 
     public static boolean matches(ItemStack matcher, ItemStack target) {

@@ -24,24 +24,14 @@ public final class MatcherMenu extends AbstractContainerMenu {
 
     public MatcherMenu(int containerId, Inventory inventory) {
         super(ModMenus.MATCHER.get(), containerId);
-        Player player = inventory.player;
-        ItemStack matcher = findMatcher(player);
-        if (matcher != null) {
-            ItemStack savedPreview = MatcherData.preview(matcher);
-            if (!savedPreview.isEmpty()) {
-                preview.setItem(0, savedPreview.copyWithCount(1));
-                selectedIndex = MatcherData.selectedIndex(matcher, savedPreview);
-            }
-        }
-
         addSlot(new PreviewSlot(preview, 0, 21, 20));
         for (int row = 0; row < 3; row++) {
             for (int column = 0; column < 9; column++) {
-                addSlot(new Slot(inventory, column + row * 9 + 9, 21 + column * 18, 91 + row * 18));
+                addSlot(new Slot(inventory, column + row * 9 + 9, 8 + column * 18, 84 + row * 18));
             }
         }
         for (int column = 0; column < 9; column++) {
-            addSlot(new Slot(inventory, column, 21 + column * 18, 149));
+            addSlot(new Slot(inventory, column, 8 + column * 18, 142));
         }
     }
 

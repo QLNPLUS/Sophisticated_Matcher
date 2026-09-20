@@ -13,13 +13,22 @@ import java.util.List;
 
 public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     private static final ResourceLocation BACKGROUND = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/background.png");
-    private static final int GUI_WIDTH = 250;
-    private static final int GUI_HEIGHT = 200;
-    private static final int LIST_X = 62;
-    private static final int LIST_Y = 52;
+    private static final ResourceLocation DROPDOWN = new ResourceLocation(SophisticatedMatcherMod.MOD_ID, "textures/gui/dropdown.png");
+    private static final int GUI_WIDTH = 176;
+    private static final int GUI_HEIGHT = 166;
+    private static final int SELECTOR_X = 50;
+    private static final int SELECTOR_Y = 20;
+    private static final int SELECTOR_WIDTH = 120;
+    private static final int SELECTOR_HEIGHT = 18;
+    private static final int DROPDOWN_WIDTH = 120;
+    private static final int DROPDOWN_HEIGHT = 42;
+    private static final int LIST_X = 55;
+    private static final int LIST_Y = 26;
     private static final int ROW_HEIGHT = 12;
-    private static final int VISIBLE_ROWS = 6;
+    private static final int VISIBLE_ROWS = 3;
     private int scrollOffset;
+    private boolean dropdownOpen;
+    private MatcherButton saveButton;
 
     public MatcherScreen(MatcherMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -30,12 +39,14 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     @Override
     protected void init() {
         super.init();
-        addRenderableWidget(new MatcherButton(leftPos + 174, topPos + 20, Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".save"),
+        saveButton = new MatcherButton(leftPos + 108, topPos + 48,
+                Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".save"),
                 button -> {
-                    if (menu.selectedIndex() >= 0) {
+                    if (menu.selectedIndex() >= 0 && !menu.previewStack().isEmpty()) {
                         minecraft.gameMode.handleInventoryButtonClick(menu.containerId, 0);
                     }
-                }));
+                });
+        addRenderableWidget(saveButton);
     }
 
     @Override
@@ -46,7 +57,67 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         graphics.drawString(font, Component.translatable("container." + SophisticatedMatcherMod.MOD_ID + ".matcher"), 8, 6, 0x404040, false);
-        graphics.drawString(font, Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".component"), LIST_X, 39, 0x404040, false);
+        graphics.drawString(font, Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".component"), SELECTOR_X, 10, 0x404040, false);
+        if (!dropdownOpen) {
+            graphics.drawString(font, font.plainSubstrByWidth(selectorSummary(), SELECTOR_WIDTH - 10),
+                    SELECTOR_X + 5, SELECTOR_Y + 5, 0x404040, false);
+        }
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (dropdownOpen) {
+            if (isInsideDropdown(mouseX, mouseY)) {
+                if (button == 0) {
+                    int row = (int) ((mouseY - topPos - LIST_Y) / ROW_HEIGHT);
+                    int index = scrollOffset + row;
+                    if (row >= 0 && row < VISIBLE_ROWS && index < menu.entries().size()) {
+                        menu.selectIndexClient(index);
+                        minecraft.gameMode.handleInventoryButtonClick(menu.containerId, 100 + index);
+                        dropdownOpen = false;
+                    }
+                }
+                return true;
+            }
+            dropdownOpen = false;
+        }
+
+        if (button == 0 && isInsideSelector(mouseX, mouseY)) {
+            dropdownOpen = true;
+            scrollOffset = Math.min(scrollOffset, Math.max(0, menu.entries().size() - VISIBLE_ROWS));
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
+        if (dropdownOpen && isInsideDropdown(mouseX, mouseY)) {
+            int maxOffset = Math.max(0, menu.entries().size() - VISIBLE_ROWS);
+            scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset - (int) Math.signum(scrollY)));
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollY);
+    }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        if (saveButton != null) {
+            saveButton.active = menu.selectedIndex() >= 0 && !menu.previewStack().isEmpty();
+        }
+        super.render(graphics, mouseX, mouseY, partialTick);
+        if (dropdownOpen) {
+            renderDropdown(graphics);
+        } else {
+            renderTooltip(graphics, mouseX, mouseY);
+        }
+    }
+
+    private void renderDropdown(GuiGraphics graphics) {
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, 300);
+        graphics.blit(DROPDOWN, leftPos + SELECTOR_X, topPos + SELECTOR_Y,
+                0, 0, DROPDOWN_WIDTH, DROPDOWN_HEIGHT, DROPDOWN_WIDTH, DROPDOWN_HEIGHT);
 
         List<MatcherData.ComponentEntry> entries = menu.entries();
         int maxOffset = Math.max(0, entries.size() - VISIBLE_ROWS);
@@ -58,40 +129,29 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
             }
             MatcherData.ComponentEntry entry = entries.get(index);
             int color = index == menu.selectedIndex() ? 0xFFFFFF55 : 0x404040;
-            String text = font.plainSubstrByWidth(entry.text(), 175);
-            graphics.drawString(font, text, LIST_X, LIST_Y + row * ROW_HEIGHT, color, false);
+            String text = font.plainSubstrByWidth(entry.text(), DROPDOWN_WIDTH - 10);
+            graphics.drawString(font, text, leftPos + LIST_X, topPos + LIST_Y + row * ROW_HEIGHT, color, false);
         }
+        graphics.flush();
+        graphics.pose().popPose();
     }
 
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0 && mouseX >= leftPos + LIST_X && mouseX < leftPos + GUI_WIDTH - 8
-                && mouseY >= topPos + LIST_Y && mouseY < topPos + LIST_Y + VISIBLE_ROWS * ROW_HEIGHT) {
-            int row = (int) ((mouseY - (topPos + LIST_Y)) / ROW_HEIGHT);
-            int index = scrollOffset + row;
-            if (index < menu.entries().size()) {
-                menu.selectIndexClient(index);
-                minecraft.gameMode.handleInventoryButtonClick(menu.containerId, 100 + index);
-                return true;
-            }
+    private String selectorSummary() {
+        List<MatcherData.ComponentEntry> entries = menu.entries();
+        int selected = menu.selectedIndex();
+        if (selected >= 0 && selected < entries.size()) {
+            return entries.get(selected).text();
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".select").getString();
     }
 
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
-        if (mouseX >= leftPos + LIST_X && mouseX < leftPos + GUI_WIDTH - 8
-                && mouseY >= topPos + LIST_Y && mouseY < topPos + LIST_Y + VISIBLE_ROWS * ROW_HEIGHT) {
-            int maxOffset = Math.max(0, menu.entries().size() - VISIBLE_ROWS);
-            scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset - (int) Math.signum(scrollY)));
-            return true;
-        }
-        return super.mouseScrolled(mouseX, mouseY, scrollY);
+    private boolean isInsideSelector(double mouseX, double mouseY) {
+        return mouseX >= leftPos + SELECTOR_X && mouseX < leftPos + SELECTOR_X + SELECTOR_WIDTH
+                && mouseY >= topPos + SELECTOR_Y && mouseY < topPos + SELECTOR_Y + SELECTOR_HEIGHT;
     }
 
-    @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        super.render(graphics, mouseX, mouseY, partialTick);
-        renderTooltip(graphics, mouseX, mouseY);
+    private boolean isInsideDropdown(double mouseX, double mouseY) {
+        return mouseX >= leftPos + SELECTOR_X && mouseX < leftPos + SELECTOR_X + DROPDOWN_WIDTH
+                && mouseY >= topPos + SELECTOR_Y && mouseY < topPos + SELECTOR_Y + DROPDOWN_HEIGHT;
     }
 }
