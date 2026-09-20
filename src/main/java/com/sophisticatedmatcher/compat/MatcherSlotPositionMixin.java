@@ -1,5 +1,6 @@
 package com.sophisticatedmatcher.compat;
 
+import com.sophisticatedmatcher.client.MatcherSlotPositionAccess;
 import net.minecraft.world.inventory.Slot;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

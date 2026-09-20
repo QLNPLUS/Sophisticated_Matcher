@@ -1,4 +1,4 @@
-package com.sophisticatedmatcher.compat;
+package com.sophisticatedmatcher.client;
 
 /** Client-side accessors added to vanilla Slot by MatcherSlotPositionMixin. */
 public interface MatcherSlotPositionAccess {
