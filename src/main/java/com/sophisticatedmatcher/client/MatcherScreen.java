@@ -39,6 +39,7 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
     protected void init() {
         super.init();
         MatcherLayoutDebug.beginScreen();
+        MatcherLayoutDebug.applyMenuLayout(menu);
         saveButton = new MatcherButton(leftPos + 108, topPos + 48,
                 Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".save"),
                 button -> {
@@ -110,6 +111,7 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        MatcherLayoutDebug.applyMenuLayout(menu);
         if (saveButton != null) {
             saveButton.setX(layoutX(MatcherLayoutDebug.Widget.SAVE_BUTTON, 108) + leftPos);
             saveButton.setY(layoutY(MatcherLayoutDebug.Widget.SAVE_BUTTON, 48) + topPos);
@@ -260,6 +262,10 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
             case DROPDOWN -> new DebugBounds(dropdownX(), dropdownY(), DROPDOWN_WIDTH, dropdownHeight());
             case SAVE_BUTTON -> new DebugBounds(leftPos + layoutX(widget, 108),
                     topPos + layoutY(widget, 48), saveButton == null ? 60 : saveButton.getWidth(), 16);
+            case INVENTORY -> new DebugBounds(leftPos + layoutX(widget, 8),
+                    topPos + layoutY(widget, 84), 162, 54);
+            case HOTBAR -> new DebugBounds(leftPos + layoutX(widget, 8),
+                    topPos + layoutY(widget, 142), 162, 18);
         };
     }
 
