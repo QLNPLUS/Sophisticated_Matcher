@@ -6,7 +6,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sophisticatedmatcher.MatcherConfig;
-import com.sophisticatedmatcher.compat.MatcherSlotPositionAccess;
 import com.sophisticatedmatcher.menu.MatcherMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
