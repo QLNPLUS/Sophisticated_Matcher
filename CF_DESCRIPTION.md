@@ -5,6 +5,8 @@ Storage and Sophisticated Backpacks. Instead of storing a whole item, it stores 
 that item's data, and Sophisticated filter upgrades then accept every item that satisfies the
 rule - no item ID required.
 
+<p><img src="https://media.forgecdn.net/attachments/description/null/description_d1b3fc34-c910-4d0a-85f7-a9d0d94afde3.png" alt="" width="850" height="803"><img src="https://media.forgecdn.net/attachments/description/null/description_383b69e7-fc3d-4471-8fa4-9a76dd0a9091.png" alt="" width="850" height="799"><img src="https://media.forgecdn.net/attachments/description/null/description_fd2cb1a1-5409-4371-9ade-443e1685387b.png" alt="" width="850" height="663"><img src="https://media.forgecdn.net/attachments/description/null/description_bbb6fcbd-6175-4586-8775-c2d1619c6185.png" alt="" width="850" height="601"></p>
+
 ## What it does
 
 - Right-click the matcher to open its GUI and put an example item into the preview slot.
@@ -39,14 +41,20 @@ rule - no item ID required.
 6. Put the matcher into a Sophisticated Storage or Sophisticated Backpacks filter upgrade.
 7. Disable item ID matching and enable NBT / component matching in that upgrade.
 
-Every item that satisfies the saved rule then passes the filter. A rule on
-`components.minecraft:rarity = "rare"`, for example, matches rare items of any type.
+Every item that satisfies the saved rule then passes the filter. On 1.21.1 and newer the path
+starts at the component ID, so a rule on `minecraft:rarity = "rare"` matches rare items of any
+type; on 1.20.1 the same idea uses a legacy NBT path such as `display.Name`.
 
 ## Editor controls
 
 - Click the `+` / `-` markers in the tree to expand or collapse branches.
 - Scroll the tree with the mouse wheel, drag the vertical or horizontal scrollbar, or hold Shift
   while scrolling to move sideways through long paths.
+- The operator button cycles through the operators that fit the selected entry. Numeric entries
+  also offer `>`, `>=`, `<`, `<=` and a range; other entries offer `=`, `!=`, `exists` and
+  `not exists`.
+- In range mode the value field becomes Min and Max, and the bracket button cycles the bounds
+  through `[]`, `(]`, `()` and `[)`.
 
 ## Compatibility
 
