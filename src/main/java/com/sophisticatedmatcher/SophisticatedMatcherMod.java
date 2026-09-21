@@ -2,7 +2,8 @@ package com.sophisticatedmatcher;
 
 import com.sophisticatedmatcher.registry.ModItems;
 import com.sophisticatedmatcher.registry.ModMenus;
-import com.sophisticatedmatcher.compat.CreativeTabCompat;
+import com.sophisticatedmatcher.creative.CreativeTabCompat;
+import com.sophisticatedmatcher.network.MatcherNetwork;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
@@ -17,6 +18,7 @@ public final class SophisticatedMatcherMod {
         ModItems.ITEMS.register(modEventBus);
         ModMenus.MENUS.register(modEventBus);
         modEventBus.addListener(CreativeTabCompat::addItems);
+        MatcherNetwork.init();
         ModLoadingContext.get().registerConfig(
                 ModConfig.Type.CLIENT, MatcherConfig.SPEC, "sophisticated_matcher-client.toml");
     }

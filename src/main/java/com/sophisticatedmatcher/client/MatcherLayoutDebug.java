@@ -12,6 +12,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.Slot;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -25,20 +26,25 @@ import java.util.Locale;
 public final class MatcherLayoutDebug {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final String FILE_NAME = "sophisticated_matcher_layout.json";
+    private static final String EDITOR_FILE_NAME = "sophisticated_matcher_editor_layout.json";
     private static final int MAX_OFFSET = 512;
     private static final EnumMap<Widget, Position> DEFAULT_POSITIONS = defaultPositions();
+    private static final EnumMap<Widget, Position> EDITOR_DEFAULT_POSITIONS = editorDefaultPositions();
     private static final EnumMap<Widget, Position> POSITIONS = new EnumMap<>(Widget.class);
     private static Widget selected = Widget.TITLE;
     private static boolean enabled;
     private static boolean loaded;
+    private static boolean debugStateInitialized;
+    private static boolean editorLayout;
 
     public enum Widget {
         TITLE("Title"),
         PREVIEW_SLOT("Preview slot"),
-        SELECTOR_LABEL("Selector label"),
-        SELECTOR("Selector"),
-        DROPDOWN("Dropdown"),
-        SAVE_BUTTON("Save button"),
+        SELECTOR("NBT tree content"),
+        VERTICAL_SCROLLBAR("Vertical scrollbar"),
+        HORIZONTAL_SCROLLBAR("Horizontal scrollbar"),
+        DROPDOWN("Right controls"),
+        SAVE_BUTTON("Action buttons"),
         INVENTORY("Player inventory"),
         HOTBAR("Hotbar");
 
@@ -57,25 +63,57 @@ public final class MatcherLayoutDebug {
     }
 
     public static void beginScreen() {
+        beginScreen(false);
+    }
+
+    public static void beginEditorScreen() {
+        beginScreen(true);
+    }
+
+    private static void beginScreen(boolean editor) {
+        editorLayout = editor;
         loaded = false;
         load();
+        if (!debugStateInitialized) {
+            enabled = MatcherConfig.layoutDebugEnabledByDefault();
+            debugStateInitialized = true;
+        }
     }
 
     public static boolean isEnabled() {
-        return enabled && MatcherConfig.layoutDebugEnabled();
-    }
-
-    public static boolean isConfiguredEnabled() {
-        return MatcherConfig.layoutDebugEnabled();
+        return enabled;
     }
 
     public static boolean toggle() {
-        if (!MatcherConfig.layoutDebugEnabled()) {
-            return false;
-        }
         load();
         enabled = !enabled;
         return enabled;
+    }
+
+    public static boolean keyPressed(int keyCode, boolean reverseSelection, boolean fineAdjustment) {
+        if (keyCode == GLFW.GLFW_KEY_F8) {
+            toggle();
+            return true;
+        }
+        if (!isEnabled()) {
+            return false;
+        }
+        if (keyCode == GLFW.GLFW_KEY_TAB) {
+            selectNext(reverseSelection);
+            return true;
+        }
+        int dx = 0;
+        int dy = 0;
+        if (keyCode == GLFW.GLFW_KEY_LEFT) dx = -1;
+        if (keyCode == GLFW.GLFW_KEY_RIGHT) dx = 1;
+        if (keyCode == GLFW.GLFW_KEY_UP) dy = -1;
+        if (keyCode == GLFW.GLFW_KEY_DOWN) dy = 1;
+        if (dx == 0 && dy == 0) {
+            return false;
+        }
+        int step = fineAdjustment ? 1 : 5;
+        moveSelected(dx * step, dy * step);
+        return true;
     }
 
     public static Widget selected() {
@@ -150,19 +188,35 @@ public final class MatcherLayoutDebug {
 
     private static Position position(Widget widget) {
         return POSITIONS.getOrDefault(widget,
-                DEFAULT_POSITIONS.getOrDefault(widget, new Position(0, 0)));
+                (editorLayout ? EDITOR_DEFAULT_POSITIONS : DEFAULT_POSITIONS)
+                        .getOrDefault(widget, new Position(0, 0)));
     }
 
     private static EnumMap<Widget, Position> defaultPositions() {
         EnumMap<Widget, Position> positions = new EnumMap<>(Widget.class);
         positions.put(Widget.TITLE, new Position(0, 0));
         positions.put(Widget.PREVIEW_SLOT, new Position(-1, 13));
-        positions.put(Widget.SELECTOR_LABEL, new Position(0, 10));
         positions.put(Widget.SELECTOR, new Position(0, 11));
+        positions.put(Widget.VERTICAL_SCROLLBAR, new Position(0, 0));
+        positions.put(Widget.HORIZONTAL_SCROLLBAR, new Position(0, 0));
         positions.put(Widget.DROPDOWN, new Position(0, 11));
         positions.put(Widget.SAVE_BUTTON, new Position(0, 11));
         positions.put(Widget.INVENTORY, new Position(0, 0));
         positions.put(Widget.HOTBAR, new Position(0, 0));
+        return positions;
+    }
+
+    private static EnumMap<Widget, Position> editorDefaultPositions() {
+        EnumMap<Widget, Position> positions = new EnumMap<>(Widget.class);
+        positions.put(Widget.TITLE, new Position(0, 0));
+        positions.put(Widget.PREVIEW_SLOT, new Position(-70, -20));
+        positions.put(Widget.SELECTOR, new Position(0, -20));
+        positions.put(Widget.VERTICAL_SCROLLBAR, new Position(0, -20));
+        positions.put(Widget.HORIZONTAL_SCROLLBAR, new Position(0, -20));
+        positions.put(Widget.DROPDOWN, new Position(0, 0));
+        positions.put(Widget.SAVE_BUTTON, new Position(0, -23));
+        positions.put(Widget.INVENTORY, new Position(0, -21));
+        positions.put(Widget.HOTBAR, new Position(0, -21));
         return positions;
     }
 
@@ -181,7 +235,7 @@ public final class MatcherLayoutDebug {
 
     private static Path file() {
         return Minecraft.getInstance().gameDirectory.toPath()
-                .resolve("config").resolve(FILE_NAME);
+                .resolve("config").resolve(editorLayout ? EDITOR_FILE_NAME : FILE_NAME);
     }
 
     private static void load() {

@@ -1,4 +1,4 @@
-package com.sophisticatedmatcher.compat;
+package com.sophisticatedmatcher.creative;
 
 import com.sophisticatedmatcher.registry.ModItems;
 import net.minecraft.core.registries.Registries;

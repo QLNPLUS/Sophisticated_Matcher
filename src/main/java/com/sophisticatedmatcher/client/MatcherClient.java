@@ -14,6 +14,6 @@ public final class MatcherClient {
 
     @SubscribeEvent
     public static void registerScreens(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> MenuScreens.register(ModMenus.MATCHER.get(), MatcherScreen::new));
+        event.enqueueWork(() -> MenuScreens.register(ModMenus.MATCHER.get(), MatcherEditorScreen::new));
     }
 }
