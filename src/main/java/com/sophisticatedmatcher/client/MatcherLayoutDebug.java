@@ -209,14 +209,14 @@ public final class MatcherLayoutDebug {
     private static EnumMap<Widget, Position> editorDefaultPositions() {
         EnumMap<Widget, Position> positions = new EnumMap<>(Widget.class);
         positions.put(Widget.TITLE, new Position(0, 0));
-        positions.put(Widget.PREVIEW_SLOT, new Position(-70, -20));
-        positions.put(Widget.SELECTOR, new Position(0, -20));
+        positions.put(Widget.PREVIEW_SLOT, new Position(-72, -21));
+        positions.put(Widget.SELECTOR, new Position(0, -18));
         positions.put(Widget.VERTICAL_SCROLLBAR, new Position(0, -20));
-        positions.put(Widget.HORIZONTAL_SCROLLBAR, new Position(0, -20));
-        positions.put(Widget.DROPDOWN, new Position(0, 0));
-        positions.put(Widget.SAVE_BUTTON, new Position(0, -23));
-        positions.put(Widget.INVENTORY, new Position(0, -21));
-        positions.put(Widget.HOTBAR, new Position(0, -21));
+        positions.put(Widget.HORIZONTAL_SCROLLBAR, new Position(5, -20));
+        positions.put(Widget.DROPDOWN, new Position(0, 2));
+        positions.put(Widget.SAVE_BUTTON, new Position(0, -26));
+        positions.put(Widget.INVENTORY, new Position(0, -26));
+        positions.put(Widget.HOTBAR, new Position(0, -26));
         return positions;
     }
 
