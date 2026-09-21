@@ -26,7 +26,6 @@ concurrency:
 
 jobs:
   publish-forge-1-20-1:
-    if: github.event_name != 'release' || contains(github.event.release.tag_name, 'forge-1.20.1')
     runs-on: ubuntu-latest
     steps:
       - name: Check out release ref
