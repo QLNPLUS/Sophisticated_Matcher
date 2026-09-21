@@ -35,39 +35,38 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
     private static final ResourceLocation HORIZONTAL_SCROLL_KNOB = ResourceLocation.fromNamespaceAndPath(
             SophisticatedMatcherMod.MOD_ID, "textures/gui/scroll_horizontal_knob.png");
     private static final int GUI_WIDTH = 360;
-    private static final int GUI_HEIGHT = 284;
+    private static final int GUI_HEIGHT = 266;
     private static final int BACKGROUND_TEXTURE_HEIGHT = 340;
-    private static final int LEFT_PANEL_X = 12;
-    private static final int RIGHT_PANEL_X = 180;
-    private static final int PANEL_Y = 34;
-    private static final int PANEL_WIDTH = 168;
-    private static final int PANEL_HEIGHT = 192;
+    private static final int LEFT_PANEL_X = 18;
+    private static final int TREE_WIDTH = 220;
+    private static final int SCROLLBAR_SIZE = 8;
+    private static final int SCROLLBAR_TEXTURE_SIZE = 8;
+    private static final int RIGHT_PANEL_X = 250;
+    private static final int RIGHT_PANEL_WIDTH = 90;
     private static final int TREE_X = LEFT_PANEL_X;
-    private static final int TREE_WIDTH = PANEL_WIDTH;
-    private static final int TREE_LIST_Y = 64;
+    private static final int TREE_LIST_Y = 37;
     private static final int ROW_HEIGHT = 12;
-    private static final int TREE_VIEW_X = TREE_X + 4;
-    private static final int TREE_VIEW_WIDTH = TREE_WIDTH - 16;
+    private static final int TREE_VIEW_X = TREE_X + 3;
+    private static final int TREE_VIEW_WIDTH = TREE_WIDTH - SCROLLBAR_SIZE - 5;
     private static final int TREE_VIEW_HEIGHT = 144;
     private static final int MAX_VISIBLE_ROWS = TREE_VIEW_HEIGHT / ROW_HEIGHT;
-    private static final int SCROLLBAR_SIZE = 6;
-    private static final int SCROLLBAR_TEXTURE_SIZE = 8;
-    private static final int RULE_X = RIGHT_PANEL_X + 10;
-    private static final int CONTROL_WIDTH = PANEL_WIDTH - 20;
+    private static final int RULE_X = RIGHT_PANEL_X;
+    private static final int CONTROL_WIDTH = RIGHT_PANEL_WIDTH;
+    private static final int RANGE_FIELD_GAP = 4;
+    private static final int RANGE_FIELD_WIDTH = (CONTROL_WIDTH - RANGE_FIELD_GAP) / 2;
+    private static final int BOUNDS_BUTTON_WIDTH = 28;
+    private static final int MODE_BUTTON_WIDTH = CONTROL_WIDTH - BOUNDS_BUTTON_WIDTH - 4;
     private static final int INVENTORY_X = (GUI_WIDTH - 162) / 2;
-    private static final int PREVIEW_SLOT_X = LEFT_PANEL_X + (PANEL_WIDTH - 18) / 2;
-    private static final int PREVIEW_SLOT_Y = PANEL_Y + 7;
-    private static final int MAIN_INVENTORY_Y = 226;
-    private static final int HOTBAR_Y = 284;
-    private static final int PATH_Y = PANEL_Y + 28;
-    private static final int MODE_BUTTON_Y = PANEL_Y + 42;
-    private static final int VALUE_LABEL_Y = PANEL_Y + 61;
-    private static final int VALUE_BOX_Y = PANEL_Y + 72;
-    private static final int MAX_LABEL_Y = PANEL_Y + 93;
-    private static final int MAX_BOX_Y = PANEL_Y + 104;
-    private static final int BOUNDS_BUTTON_Y = PANEL_Y + 136;
-    private static final int STATUS_Y = PANEL_Y + 156;
-    private static final int ACTION_BUTTON_Y = PANEL_Y + 170;
+    private static final int PREVIEW_SLOT_X = 357;
+    private static final int PREVIEW_SLOT_Y = 92;
+    private static final int MAIN_INVENTORY_Y = 210;
+    private static final int HOTBAR_Y = 268;
+    private static final int MODE_BUTTON_Y = 62;
+    private static final int VALUE_BOX_Y = 89;
+    private static final int BOUNDS_BUTTON_Y = MODE_BUTTON_Y;
+    private static final int NORMAL_STATUS_Y = VALUE_BOX_Y + 18;
+    private static final int BETWEEN_STATUS_Y = NORMAL_STATUS_Y;
+    private static final int ACTION_BUTTON_Y = 155;
     private static final int INVENTORY_TEXTURE_SIZE = 256;
     private static final int INVENTORY_SLOT_OFFSET = 1;
 
@@ -90,9 +89,7 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
     private MatcherButton modeButton;
     private MatcherButton boundsButton;
     private MatcherButton saveButton;
-    private MatcherButton backButton;
     private String errorMessage = "";
-    private String statusMessage = "";
 
     public MatcherEditorScreen(MatcherMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -109,8 +106,8 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
         refreshTree();
 
         valueBox = createEditBox("", CONTROL_WIDTH);
-        minBox = createEditBox("", CONTROL_WIDTH - 31);
-        maxBox = createEditBox("", CONTROL_WIDTH - 31);
+        minBox = createEditBox("", RANGE_FIELD_WIDTH);
+        maxBox = createEditBox("", RANGE_FIELD_WIDTH);
         addRenderableWidget(valueBox);
         addRenderableWidget(minBox);
         addRenderableWidget(maxBox);
@@ -118,17 +115,14 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
 
         modeButton = editorButton(RULE_X, MODE_BUTTON_Y, CONTROL_WIDTH,
                 Component.literal(""), button -> cycleOperator());
-        boundsButton = editorButton(RULE_X, BOUNDS_BUTTON_Y, CONTROL_WIDTH,
+        boundsButton = editorButton(RULE_X + CONTROL_WIDTH - BOUNDS_BUTTON_WIDTH,
+                BOUNDS_BUTTON_Y, BOUNDS_BUTTON_WIDTH,
                 Component.literal(""), button -> cycleBounds());
-        backButton = editorButton(RULE_X, ACTION_BUTTON_Y, 70,
-                Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".back"),
-                button -> returnToMatcher());
-        saveButton = editorButton(RULE_X + 78, ACTION_BUTTON_Y, 70,
+        saveButton = editorButton(RULE_X, actionButtonY(), CONTROL_WIDTH,
                 Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".save_rule"),
                 button -> saveRule());
         addRenderableWidget(modeButton);
         addRenderableWidget(boundsButton);
-        addRenderableWidget(backButton);
         addRenderableWidget(saveButton);
         updateEditorControls();
     }
@@ -138,6 +132,8 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
                 topPos + layoutY(MatcherLayoutDebug.Widget.DROPDOWN, VALUE_BOX_Y), width, 16, Component.empty());
         box.setMaxLength(64);
         box.setValue(value);
+        box.setTextColor(0xFFFFFF);
+        box.setTextColorUneditable(0xFFFFFF);
         return box;
     }
 
@@ -235,7 +231,6 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
         minBox.setCursorPosition(0);
         maxBox.setCursorPosition(0);
         errorMessage = "";
-        statusMessage = "";
     }
 
     private void cycleOperator() {
@@ -243,7 +238,6 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
         int next = (indexOf(options, operator) + 1) % options.length;
         operator = options[next];
         errorMessage = "";
-        statusMessage = "";
         updateEditorControls();
     }
 
@@ -287,20 +281,22 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
         minBox.visible = between;
         maxBox.visible = between;
         boundsButton.visible = between;
+        modeButton.setWidth(between ? MODE_BUTTON_WIDTH : CONTROL_WIDTH);
+        boundsButton.setWidth(BOUNDS_BUTTON_WIDTH);
         valueBox.setPosition(leftPos + layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X),
                 topPos + layoutY(MatcherLayoutDebug.Widget.DROPDOWN, VALUE_BOX_Y));
-        minBox.setPosition(leftPos + layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X + 31),
+        minBox.setPosition(leftPos + layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X),
                 topPos + layoutY(MatcherLayoutDebug.Widget.DROPDOWN, VALUE_BOX_Y));
-        maxBox.setPosition(leftPos + layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X + 31),
-                topPos + layoutY(MatcherLayoutDebug.Widget.DROPDOWN, MAX_BOX_Y));
+        maxBox.setPosition(leftPos + layoutX(MatcherLayoutDebug.Widget.DROPDOWN,
+                        RULE_X + RANGE_FIELD_WIDTH + RANGE_FIELD_GAP),
+                topPos + layoutY(MatcherLayoutDebug.Widget.DROPDOWN, VALUE_BOX_Y));
         modeButton.setPosition(leftPos + layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X),
                 topPos + layoutY(MatcherLayoutDebug.Widget.DROPDOWN, MODE_BUTTON_Y));
-        boundsButton.setPosition(leftPos + layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X),
+        boundsButton.setPosition(leftPos + layoutX(MatcherLayoutDebug.Widget.DROPDOWN,
+                        RULE_X + CONTROL_WIDTH - BOUNDS_BUTTON_WIDTH),
                 topPos + layoutY(MatcherLayoutDebug.Widget.DROPDOWN, BOUNDS_BUTTON_Y));
-        backButton.setPosition(leftPos + layoutX(MatcherLayoutDebug.Widget.SAVE_BUTTON, RULE_X),
-                topPos + layoutY(MatcherLayoutDebug.Widget.SAVE_BUTTON, ACTION_BUTTON_Y));
-        saveButton.setPosition(leftPos + layoutX(MatcherLayoutDebug.Widget.SAVE_BUTTON, RULE_X + 78),
-                topPos + layoutY(MatcherLayoutDebug.Widget.SAVE_BUTTON, ACTION_BUTTON_Y));
+        saveButton.setPosition(leftPos + layoutX(MatcherLayoutDebug.Widget.SAVE_BUTTON, RULE_X),
+                topPos + layoutY(MatcherLayoutDebug.Widget.SAVE_BUTTON, actionButtonY()));
         valueBox.setEditable(selectedNode != null && selectedNode.value() instanceof NumericTag);
         saveButton.active = selectedNode != null && !menu.previewStack().isEmpty();
         if (operator == MatcherData.Operator.EXISTS || operator == MatcherData.Operator.NOT_EXISTS) {
@@ -308,7 +304,7 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
         } else {
             String left = minInclusive ? "[" : "(";
             String right = maxInclusive ? "]" : ")";
-            boundsButton.setMessage(Component.literal(left + "x, x" + right));
+            boundsButton.setMessage(Component.literal(left + right));
         }
     }
 
@@ -346,19 +342,12 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
         }
         MatcherNetwork.sendSaveRule(menu.containerId, rule);
         errorMessage = "";
-        statusMessage = Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".saved").getString();
-    }
-
-    private void returnToMatcher() {
-        super.onClose();
     }
 
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
-        graphics.blit(BACKGROUND, leftPos, topPos, 0, 0, GUI_WIDTH, GUI_HEIGHT - 3,
+        graphics.blit(BACKGROUND, leftPos, topPos, 0, 0, GUI_WIDTH, GUI_HEIGHT,
                 GUI_WIDTH, BACKGROUND_TEXTURE_HEIGHT);
-        graphics.blit(BACKGROUND, leftPos, topPos + GUI_HEIGHT - 3, 0, 337,
-                GUI_WIDTH, 3, GUI_WIDTH, BACKGROUND_TEXTURE_HEIGHT);
         graphics.blit(VANILLA_INVENTORY,
                 leftPos + layoutX(MatcherLayoutDebug.Widget.INVENTORY, INVENTORY_X) - INVENTORY_SLOT_OFFSET,
                 topPos + layoutY(MatcherLayoutDebug.Widget.INVENTORY, MAIN_INVENTORY_Y) - INVENTORY_SLOT_OFFSET,
@@ -374,36 +363,9 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
         graphics.drawString(font, Component.translatable("container." + SophisticatedMatcherMod.MOD_ID + ".editor"),
                 layoutX(MatcherLayoutDebug.Widget.TITLE, 8),
                 layoutY(MatcherLayoutDebug.Widget.TITLE, 6), 0xFF404040, false);
-        graphics.drawString(font, Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".rule"),
-                layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RIGHT_PANEL_X + 10),
-                layoutY(MatcherLayoutDebug.Widget.DROPDOWN, PANEL_Y + 7), 0xFF404040, false);
-        if (selectedNode == null) {
-            graphics.drawString(font, Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".select_leaf"),
-                    layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X),
-                    layoutY(MatcherLayoutDebug.Widget.DROPDOWN, PATH_Y), 0xFF777777, false);
-        } else {
-            String path = font.plainSubstrByWidth(selectedNode.pathText(), CONTROL_WIDTH);
-            graphics.drawString(font, path, layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X),
-                    layoutY(MatcherLayoutDebug.Widget.DROPDOWN, PATH_Y), 0xFF303030, false);
-            if (operator == MatcherData.Operator.BETWEEN) {
-                graphics.drawString(font, Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".min"),
-                        layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X),
-                        layoutY(MatcherLayoutDebug.Widget.DROPDOWN, VALUE_LABEL_Y), 0xFF555555, false);
-                graphics.drawString(font, Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".max"),
-                        layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X),
-                        layoutY(MatcherLayoutDebug.Widget.DROPDOWN, MAX_LABEL_Y), 0xFF555555, false);
-            } else {
-                graphics.drawString(font, Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".value"),
-                        layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X),
-                        layoutY(MatcherLayoutDebug.Widget.DROPDOWN, VALUE_LABEL_Y), 0xFF555555, false);
-            }
-        }
         if (!errorMessage.isEmpty()) {
             graphics.drawString(font, errorMessage, layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X),
-                    layoutY(MatcherLayoutDebug.Widget.DROPDOWN, STATUS_Y), 0xFFFF5555, false);
-        } else if (!statusMessage.isEmpty()) {
-            graphics.drawString(font, statusMessage, layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X),
-                    layoutY(MatcherLayoutDebug.Widget.DROPDOWN, STATUS_Y), 0xFF3F7F3F, false);
+                    layoutY(MatcherLayoutDebug.Widget.DROPDOWN, errorMessageY()), 0xFFFF5555, false);
         }
     }
 
@@ -513,9 +475,10 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
             case HORIZONTAL_SCROLLBAR -> new DebugBounds(horizontalScrollbarX(), horizontalScrollbarY(),
                     TREE_VIEW_WIDTH, SCROLLBAR_SIZE);
             case DROPDOWN -> new DebugBounds(leftPos + layoutX(widget, RULE_X),
-                    topPos + layoutY(widget, PANEL_Y + 7), CONTROL_WIDTH, ACTION_BUTTON_Y - (PANEL_Y + 7));
+                    topPos + layoutY(widget, MODE_BUTTON_Y), CONTROL_WIDTH,
+                    VALUE_BOX_Y + 16 - MODE_BUTTON_Y);
             case SAVE_BUTTON -> new DebugBounds(leftPos + layoutX(widget, RULE_X),
-                    topPos + layoutY(widget, ACTION_BUTTON_Y), 148, 16);
+                    topPos + layoutY(widget, actionButtonY()), CONTROL_WIDTH, 16);
             case INVENTORY -> new DebugBounds(leftPos + layoutX(widget, INVENTORY_X),
                     topPos + layoutY(widget, MAIN_INVENTORY_Y), 162, 54);
             case HOTBAR -> new DebugBounds(leftPos + layoutX(widget, INVENTORY_X),
@@ -529,6 +492,15 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
 
     private int layoutY(MatcherLayoutDebug.Widget widget, int normalY) {
         return MatcherLayoutDebug.y(widget, normalY);
+    }
+
+    private int actionButtonY() {
+        return ACTION_BUTTON_Y;
+    }
+
+    private int errorMessageY() {
+        return operator == MatcherData.Operator.BETWEEN
+                ? BETWEEN_STATUS_Y : NORMAL_STATUS_Y;
     }
 
     private int treePanelX() {
@@ -549,7 +521,7 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
     }
 
     private int verticalScrollbarY() {
-        return topPos + layoutY(MatcherLayoutDebug.Widget.VERTICAL_SCROLLBAR, TREE_LIST_Y);
+        return topPos + layoutY(MatcherLayoutDebug.Widget.VERTICAL_SCROLLBAR, TREE_LIST_Y + 2);
     }
 
     private int horizontalScrollbarX() {
@@ -558,7 +530,7 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
 
     private int horizontalScrollbarY() {
         return topPos + layoutY(MatcherLayoutDebug.Widget.HORIZONTAL_SCROLLBAR,
-                TREE_LIST_Y + TREE_VIEW_HEIGHT);
+                TREE_LIST_Y + TREE_VIEW_HEIGHT + 1);
     }
 
     @Override

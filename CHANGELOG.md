@@ -4,6 +4,7 @@
 
 - Added a dedicated matcher editor with a scrollable data tree and path-based comparison rules.
 - Applied the supplied editor layout and updated button and scrollbar behavior.
+- Matcher editor input fields now use white text so entered values stay readable.
 
 ## 1.1.0 - 2026-09-20
 
