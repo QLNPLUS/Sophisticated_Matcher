@@ -89,7 +89,7 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
     private MatcherButton modeButton;
     private MatcherButton boundsButton;
     private MatcherButton saveButton;
-    private String errorMessage = "";
+    private Component errorMessage = Component.empty();
 
     public MatcherEditorScreen(MatcherMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -230,14 +230,14 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
         valueBox.setCursorPosition(0);
         minBox.setCursorPosition(0);
         maxBox.setCursorPosition(0);
-        errorMessage = "";
+        errorMessage = Component.empty();
     }
 
     private void cycleOperator() {
         MatcherData.Operator[] options = operatorOptions();
         int next = (indexOf(options, operator) + 1) % options.length;
         operator = options[next];
-        errorMessage = "";
+        errorMessage = Component.empty();
         updateEditorControls();
     }
 
@@ -273,8 +273,8 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
 
     private void updateEditorControls() {
         if (modeButton == null || valueBox == null) return;
-        modeButton.setMessage(Component.literal(MatcherData.Operator.BETWEEN == operator
-                ? "范围" : operator.symbol()));
+        modeButton.setMessage(Component.translatable(
+                "gui." + SophisticatedMatcherMod.MOD_ID + ".operator." + operator.id()));
         boolean existsMode = operator == MatcherData.Operator.EXISTS || operator == MatcherData.Operator.NOT_EXISTS;
         boolean between = operator == MatcherData.Operator.BETWEEN;
         valueBox.visible = !existsMode && !between;
@@ -316,24 +316,24 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
             rule = MatcherData.Rule.exists(selectedNode.path(), operator == MatcherData.Operator.EXISTS);
         } else if (operator == MatcherData.Operator.BETWEEN) {
             if (!numeric) {
-                errorMessage = "需要数值";
+                errorMessage = Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".error.number_required");
                 return;
             }
             net.minecraft.nbt.Tag min = MatcherData.parseNumeric(minBox.getValue(), selectedNode.value());
             net.minecraft.nbt.Tag max = MatcherData.parseNumeric(maxBox.getValue(), selectedNode.value());
             if (min == null || max == null) {
-                errorMessage = "数值无效";
+                errorMessage = Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".error.invalid_number");
                 return;
             }
             rule = new MatcherData.Rule(selectedNode.path(), operator, null, min, max, minInclusive, maxInclusive);
             if (!MatcherData.validRange(rule)) {
-                errorMessage = "范围无效";
+                errorMessage = Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".error.invalid_range");
                 return;
             }
         } else if (numeric) {
             net.minecraft.nbt.Tag value = MatcherData.parseNumeric(valueBox.getValue(), selectedNode.value());
             if (value == null) {
-                errorMessage = "数值无效";
+                errorMessage = Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".error.invalid_number");
                 return;
             }
             rule = new MatcherData.Rule(selectedNode.path(), operator, value, null, null, true, true);
@@ -341,7 +341,7 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
             rule = new MatcherData.Rule(selectedNode.path(), operator, selectedNode.value(), null, null, true, true);
         }
         MatcherNetwork.sendSaveRule(menu.containerId, rule);
-        errorMessage = "";
+        errorMessage = Component.empty();
     }
 
     @Override
@@ -363,7 +363,7 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
         graphics.drawString(font, Component.translatable("container." + SophisticatedMatcherMod.MOD_ID + ".editor"),
                 layoutX(MatcherLayoutDebug.Widget.TITLE, 8),
                 layoutY(MatcherLayoutDebug.Widget.TITLE, 6), 0xFF404040, false);
-        if (!errorMessage.isEmpty()) {
+        if (!errorMessage.getString().isEmpty()) {
             graphics.drawString(font, errorMessage, layoutX(MatcherLayoutDebug.Widget.DROPDOWN, RULE_X),
                     layoutY(MatcherLayoutDebug.Widget.DROPDOWN, errorMessageY()), 0xFFFF5555, false);
         }
@@ -377,7 +377,7 @@ public final class MatcherEditorScreen extends AbstractContainerScreen<MatcherMe
         int viewRight = viewX + TREE_VIEW_WIDTH;
         int viewBottom = viewY + TREE_VIEW_HEIGHT;
         if (visibleNodes.isEmpty()) {
-            graphics.drawString(font, Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".no_nbt"),
+            graphics.drawString(font, Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".no_data"),
                     viewX, viewY, 0xFFAAAAAA, false);
             return;
         }
