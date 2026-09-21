@@ -32,7 +32,7 @@ public final class NbtMatcherItem extends Item {
             MatcherData.clearLegacyPreview(player.getItemInHand(hand));
             MenuProvider provider = new net.minecraft.world.SimpleMenuProvider(
                     (id, inventory, ignored) -> new MatcherMenu(id, inventory),
-                    Component.translatable("container." + SophisticatedMatcherMod.MOD_ID + ".matcher"));
+                    Component.translatable("container." + SophisticatedMatcherMod.MOD_ID + ".editor"));
             player.openMenu(provider);
         }
         return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide());
