@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1 - 2026-09-21
+
+- Renamed the editor action and screen title to NBT Matcher.
+- Added Chinese and English translations for match operators, range controls, validation messages, and empty-data states.
+- Localized saved rule summaries and matcher tooltips.
+
 ## 1.2.0 - 2026-09-21
 
 - Added a dedicated matcher editor with a scrollable data tree and path-based comparison rules.
