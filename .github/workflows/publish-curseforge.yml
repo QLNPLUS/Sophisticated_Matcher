@@ -15,7 +15,7 @@ on:
         description: CurseForge version to publish
         required: true
         type: string
-        default: 1.1.0
+        default: 1.2.0
 
 permissions:
   contents: read
@@ -26,6 +26,7 @@ concurrency:
 
 jobs:
   publish-forge-1-20-1:
+    if: github.event_name != 'release' || contains(github.event.release.tag_name, 'forge-1.20.1')
     runs-on: ubuntu-latest
     steps:
       - name: Check out release ref
@@ -48,7 +49,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="$(printf '%s' "$RAW_VERSION" | sed 's/^v//')"
+          version="$(printf '%s' "$RAW_VERSION" | sed -E 's/^v//; s/-(forge|neoforge|fabric)-[0-9][^-]*$//')"
           test -n "$version"
           echo "CURSEFORGE_VERSION=$version" >> "$GITHUB_ENV"
 
