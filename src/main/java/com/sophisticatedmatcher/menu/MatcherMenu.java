@@ -129,7 +129,7 @@ public final class MatcherMenu extends AbstractContainerMenu {
         return player.isAlive();
     }
 
-    private static ItemStack findMatcher(Player player) {
+    public static ItemStack findMatcher(Player player) {
         if (NbtMatcherItem.isMatcher(player.getMainHandItem())) {
             return player.getMainHandItem();
         }
@@ -152,6 +152,11 @@ public final class MatcherMenu extends AbstractContainerMenu {
         @Override
         public boolean mayPlace(ItemStack stack) {
             return !stack.isEmpty() && !NbtMatcherItem.isMatcher(stack);
+        }
+
+        @Override
+        public boolean isHighlightable() {
+            return false;
         }
     }
 }
