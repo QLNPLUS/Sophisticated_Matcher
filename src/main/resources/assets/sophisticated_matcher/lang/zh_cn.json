@@ -1,7 +1,7 @@
 {
-  "item.sophisticated_matcher.nbt_matcher": "NBT 匹配器",
-  "container.sophisticated_matcher.matcher": "NBT 匹配器",
-  "container.sophisticated_matcher.editor": "NBT 匹配器",
+  "item.sophisticated_matcher.nbt_matcher": "NBT匹配器",
+  "container.sophisticated_matcher.matcher": "NBT匹配器",
+  "container.sophisticated_matcher.editor": "NBT匹配器",
   "gui.sophisticated_matcher.save": "保存",
   "gui.sophisticated_matcher.edit": "编辑 NBT",
   "gui.sophisticated_matcher.save_rule": "保存",
