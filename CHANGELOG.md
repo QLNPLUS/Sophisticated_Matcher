@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0 - 2026-09-21
+
+- Added a dedicated matcher editor with a scrollable data tree and path-based comparison rules.
+- Applied the supplied editor layout and updated button and scrollbar behavior.
+
 ## 1.1.0 - 2026-09-20
 
 - Added the matcher to the Sophisticated Core creative tab when that tab is available.
