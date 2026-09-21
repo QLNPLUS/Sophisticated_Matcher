@@ -50,7 +50,8 @@ public final class NbtMatcherItem extends Item {
                     .withStyle(ChatFormatting.GRAY));
             return;
         }
-        tooltip.accept(Component.translatable("tooltip." + SophisticatedMatcherMod.MOD_ID + ".selected", selected.text())
+        tooltip.accept(Component.translatable("tooltip." + SophisticatedMatcherMod.MOD_ID + ".selected",
+                        MatcherData.ruleComponent(MatcherData.selectedRule(stack)))
                 .withStyle(ChatFormatting.GRAY));
     }
 }
