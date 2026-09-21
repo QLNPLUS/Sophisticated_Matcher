@@ -54,10 +54,10 @@ public final class MatcherScreen extends AbstractContainerScreen<MatcherMenu> {
                 MatcherLayoutDebug.x(MatcherLayoutDebug.Widget.TITLE, 8),
                 MatcherLayoutDebug.y(MatcherLayoutDebug.Widget.TITLE, 6), 0x404040, false);
         MatcherData.Rule rule = MatcherData.selectedRule(MatcherMenu.findMatcher(minecraft.player));
-        String summary = rule == null
-                ? Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".no_rule").getString()
-                : MatcherData.ruleText(rule);
-        graphics.drawString(font, font.plainSubstrByWidth(summary, 116),
+        Component summary = rule == null
+                ? Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".no_rule")
+                : MatcherData.ruleComponent(rule);
+        graphics.drawString(font, font.plainSubstrByWidth(summary.getString(), 116),
                 MatcherLayoutDebug.x(MatcherLayoutDebug.Widget.SELECTOR, 50) + 2,
                 MatcherLayoutDebug.y(MatcherLayoutDebug.Widget.SELECTOR, 43), 0x555555, false);
         if (menu.previewStack().isEmpty()) {

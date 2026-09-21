@@ -18,6 +18,7 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.NumericTag;
 import net.minecraft.nbt.ShortTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -261,6 +262,20 @@ public final class MatcherData {
                     + (rule.maxInclusive() ? "]" : ")");
             case EXISTS -> path + " exists";
             case NOT_EXISTS -> path + " not exists";
+        };
+    }
+
+    public static Component ruleComponent(Rule rule) {
+        String path = pathText(rule.path());
+        return switch (rule.operator()) {
+            case EQUALS -> Component.literal(path + " = " + valueText(rule.value()));
+            case NOT_EQUALS -> Component.literal(path + " != " + valueText(rule.value()));
+            case GREATER_THAN, GREATER_THAN_OR_EQUAL, LESS_THAN, LESS_THAN_OR_EQUAL ->
+                    Component.literal(path + " " + rule.operator().symbol() + " " + valueText(rule.value()));
+            case BETWEEN -> Component.translatable("gui.sophisticated_matcher.rule.between", path,
+                    rule.minInclusive() ? "[" : "(", valueText(rule.min()), valueText(rule.max()),
+                    rule.maxInclusive() ? "]" : ")");
+            case EXISTS, NOT_EXISTS -> Component.translatable("gui.sophisticated_matcher.rule." + rule.operator().id(), path);
         };
     }
 
