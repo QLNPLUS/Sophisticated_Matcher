@@ -12,7 +12,7 @@ without matching the item ID.
 - Java: 17
 
 The Forge 1.20.1 branch is the primary release branch. Other loader and Minecraft branches are
-kept as separate worktrees and are not part of this stable 1.0.0 release.
+kept as separate worktrees and do not carry the 1.3.0 feature set yet.
 
 ## Features
 
@@ -24,6 +24,15 @@ kept as separate worktrees and are not part of this stable 1.0.0 release.
 - The saved matcher no longer stores the complete preview item NBT.
 - The saved NBT entry is shown in the item tooltip.
 - Use the saved entry in Sophisticated filter upgrades with item ID matching disabled.
+
+### Multi NBT Matcher
+
+- A second item that stores up to nine matcher rules in its own standard-sized slot GUI.
+- Like the single matcher's preview slot, the storage slots are ghost slots: placing a configured matcher only reads its rule NBT; the matcher itself is never consumed or kept inside.
+- Click an occupied slot with an empty cursor to clear that rule; shift-click a configured matcher from your inventory to add it.
+- Each stored matcher has a three-position switch under its slot: click the top, middle, or bottom third for AND, BUT, or OR; hovering a position shows a tooltip explaining it.
+- The first stored matcher's join state is ignored (it decides the starting result), so it gets no switch.
+- Results fold left to right: the first stored matcher decides the starting result, each following matcher combines through its join state (AND keeps both matches, BUT keeps the first but not the second, OR needs either).
 
 Only the outermost NBT compound is selectable in the Forge 1.20.1 implementation. Nested NBT
 path matching is not included yet.
@@ -39,6 +48,13 @@ path matching is not included yet.
 
 The preview item is a ghost copy. It is not consumed, and it cannot be taken out of the GUI.
 
+## Crafting
+
+- NBT Matcher: Name Tag + Gold Ingot (shapeless)
+- Multi NBT Matcher: Name Tag + Diamond (shapeless)
+
+Both matcher items are also available in the Sophisticated Matcher creative tab.
+
 ## Building
 
 Use JDK 17 and run the Gradle wrapper with the build task.
@@ -47,7 +63,7 @@ Use JDK 17 and run the Gradle wrapper with the build task.
 
 The release artifact is:
 
-    build/libs/sophisticated-matcher-forge-1.20.1-1.0.0.jar
+    build/libs/sophisticated-matcher-forge-1.20.1-1.3.0.jar
 
 ## CurseForge publishing
 

@@ -1,7 +1,6 @@
 package com.sophisticatedmatcher.compat;
 
-import com.sophisticatedmatcher.item.NbtMatcherItem;
-import com.sophisticatedmatcher.util.MatcherData;
+import com.sophisticatedmatcher.item.MatcherItems;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class SophisticatedFilterLogicMixin {
     @Inject(method = "stackMatchesFilter", at = @At("HEAD"), cancellable = true, remap = false)
     private void sophisticatedMatcher$match(ItemStack stack, ItemStack filter, CallbackInfoReturnable<Boolean> callback) {
-        if (NbtMatcherItem.isMatcher(filter)) {
-            callback.setReturnValue(MatcherData.matches(filter, stack));
+        if (MatcherItems.isMatcher(filter)) {
+            callback.setReturnValue(MatcherItems.matches(filter, stack));
         }
     }
 }

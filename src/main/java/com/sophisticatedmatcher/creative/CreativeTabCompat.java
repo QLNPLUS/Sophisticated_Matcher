@@ -17,6 +17,7 @@ public final class CreativeTabCompat {
     public static void addItems(BuildCreativeModeTabContentsEvent event) {
         if (SOPHISTICATED_CORE_TAB.equals(event.getTabKey())) {
             event.accept(ModItems.NBT_MATCHER.get());
+            event.accept(ModItems.MULTI_NBT_MATCHER.get());
         }
     }
 }

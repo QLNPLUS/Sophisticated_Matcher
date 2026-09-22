@@ -1,7 +1,10 @@
 {
+  "itemGroup.sophisticated_matcher": "Sophisticated Matcher",
   "item.sophisticated_matcher.nbt_matcher": "NBT Matcher",
+  "item.sophisticated_matcher.multi_nbt_matcher": "Multi NBT Matcher",
   "container.sophisticated_matcher.matcher": "NBT Matcher",
   "container.sophisticated_matcher.editor": "NBT Matcher",
+  "container.sophisticated_matcher.multi": "Multi NBT Matcher",
   "gui.sophisticated_matcher.save": "Save",
   "gui.sophisticated_matcher.edit": "NBT Matcher",
   "gui.sophisticated_matcher.save_rule": "Save",
@@ -34,5 +37,14 @@
   "gui.sophisticated_matcher.rule.exists": "%s exists",
   "gui.sophisticated_matcher.rule.not_exists": "%s does not exist",
   "tooltip.sophisticated_matcher.selected": "Filter NBT: %s",
-  "tooltip.sophisticated_matcher.empty": "No filter NBT saved"
+  "tooltip.sophisticated_matcher.empty": "No filter NBT saved",
+  "tooltip.sophisticated_matcher.multi_empty": "No matchers stored yet",
+  "tooltip.sophisticated_matcher.rule_count": "%s matchers stored",
+  "gui.sophisticated_matcher.multi_hint": "Place configured NBT matchers in the slots",
+  "gui.sophisticated_matcher.join.and": "AND",
+  "gui.sophisticated_matcher.join.but": "BUT",
+  "gui.sophisticated_matcher.join.or": "OR",
+  "gui.sophisticated_matcher.join_desc.and": "Holds together with the previous result",
+  "gui.sophisticated_matcher.join_desc.but": "Previous result holds, but this one must not",
+  "gui.sophisticated_matcher.join_desc.or": "Either the previous result or this one holds"
 }

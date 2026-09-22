@@ -1,5 +1,6 @@
 package com.sophisticatedmatcher;
 
+import com.sophisticatedmatcher.registry.ModCreativeTabs;
 import com.sophisticatedmatcher.registry.ModItems;
 import com.sophisticatedmatcher.registry.ModMenus;
 import com.sophisticatedmatcher.creative.CreativeTabCompat;
@@ -17,6 +18,7 @@ public final class SophisticatedMatcherMod {
         var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModItems.ITEMS.register(modEventBus);
         ModMenus.MENUS.register(modEventBus);
+        ModCreativeTabs.TABS.register(modEventBus);
         modEventBus.addListener(CreativeTabCompat::addItems);
         MatcherNetwork.init();
         ModLoadingContext.get().registerConfig(
