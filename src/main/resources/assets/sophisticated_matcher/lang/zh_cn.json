@@ -1,7 +1,10 @@
 {
+  "itemGroup.sophisticated_matcher": "Sophisticated Matcher",
   "item.sophisticated_matcher.nbt_matcher": "组件匹配器",
+  "item.sophisticated_matcher.multi_nbt_matcher": "复合组件匹配器",
   "container.sophisticated_matcher.matcher": "组件匹配器",
   "container.sophisticated_matcher.editor": "组件匹配器",
+  "container.sophisticated_matcher.multi": "复合组件匹配器",
   "gui.sophisticated_matcher.save": "保存",
   "gui.sophisticated_matcher.edit": "组件匹配器",
   "gui.sophisticated_matcher.save_rule": "保存",
@@ -34,5 +37,14 @@
   "gui.sophisticated_matcher.rule.exists": "%s 存在",
   "gui.sophisticated_matcher.rule.not_exists": "%s 不存在",
   "tooltip.sophisticated_matcher.selected": "筛选组件: %s",
-  "tooltip.sophisticated_matcher.empty": "尚未保存筛选组件"
+  "tooltip.sophisticated_matcher.empty": "尚未保存筛选组件",
+  "tooltip.sophisticated_matcher.multi_empty": "尚未存入匹配器",
+  "tooltip.sophisticated_matcher.rule_count": "已存入 %s 个匹配器",
+  "gui.sophisticated_matcher.multi_hint": "将配置好的组件匹配器放入插槽",
+  "gui.sophisticated_matcher.join.and": "并且",
+  "gui.sophisticated_matcher.join.but": "但不",
+  "gui.sophisticated_matcher.join.or": "或者",
+  "gui.sophisticated_matcher.join_desc.and": "与之前的结果一起成立",
+  "gui.sophisticated_matcher.join_desc.but": "之前成立，但这条不成立",
+  "gui.sophisticated_matcher.join_desc.or": "之前或这条任一成立"
 }

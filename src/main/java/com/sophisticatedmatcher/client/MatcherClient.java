@@ -14,5 +14,6 @@ public final class MatcherClient {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenus.MATCHER.get(), MatcherEditorScreen::new);
+        event.register(ModMenus.MULTI.get(), MultiMatcherScreen::new);
     }
 }
