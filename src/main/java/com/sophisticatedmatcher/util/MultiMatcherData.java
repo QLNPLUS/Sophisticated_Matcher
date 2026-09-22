@@ -1,13 +1,18 @@
 package com.sophisticatedmatcher.util;
 
 import com.sophisticatedmatcher.item.MultiMatcherItem;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Stores up to {@link #SLOT_COUNT} matcher rules inside the multi matcher item, one per
@@ -15,6 +20,9 @@ import java.util.List;
  * never the matcher item itself. Evaluation folds left to right over the occupied slots
  * from lowest index to highest: the first occupied slot's join state is ignored, then
  * AND = acc &amp;&amp; rule, BUT = acc &amp;&amp; !rule, OR = acc || rule.
+ *
+ * <p>On this branch the data is carried by {@link DataComponents#CUSTOM_DATA}, because item
+ * NBT is replaced by data components; the stored compound layout is unchanged.</p>
  */
 public final class MultiMatcherData {
     private static final String DATA_KEY = "sophisticated_matcher";
@@ -80,17 +88,17 @@ public final class MultiMatcherData {
             return result;
         }
         CompoundTag data = getData(matcher);
-        if (data.contains(SLOTS_KEY, Tag.TAG_LIST)) {
-            ListTag list = data.getList(SLOTS_KEY, Tag.TAG_COMPOUND);
+        if (data.contains(SLOTS_KEY)) {
+            ListTag list = data.getListOrEmpty(SLOTS_KEY);
             for (int i = 0; i < Math.min(list.size(), SLOT_COUNT); i++) {
-                CompoundTag encoded = list.getCompound(i);
-                Join join = Join.fromId(encoded.getString(JOIN_KEY));
+                CompoundTag encoded = list.getCompoundOrEmpty(i);
+                Join join = Join.fromId(encoded.getStringOr(JOIN_KEY, ""));
                 MatcherData.Rule rule = readRule(encoded);
                 if (rule != null) {
                     result.set(i, new Slot(join, rule));
                 }
             }
-        } else if (data.contains(LEGACY_ENTRIES_KEY, Tag.TAG_LIST)) {
+        } else if (data.contains(LEGACY_ENTRIES_KEY)) {
             migrateLegacyEntries(data, result);
         }
         return result;
@@ -115,34 +123,33 @@ public final class MultiMatcherData {
             }
             list.add(encoded);
         }
-        CompoundTag root = matcher.getOrCreateTag();
-        CompoundTag data = root.contains(DATA_KEY, Tag.TAG_COMPOUND)
-                ? root.getCompound(DATA_KEY) : new CompoundTag();
+        CompoundTag root = getCustomData(matcher);
+        CompoundTag data = root.getCompoundOrEmpty(DATA_KEY);
         data.put(SLOTS_KEY, list);
         data.remove(LEGACY_ENTRIES_KEY);
         root.put(DATA_KEY, data);
-        matcher.setTag(root);
+        setCustomData(matcher, root);
     }
 
-    /** Cycles the join state stored in a display stack's own tag; null removes it. */
+    /** Reads the join state carried by a display stack; an absent state means AND. */
     public static Join stackJoin(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return Join.AND;
         }
-        CompoundTag root = stack.getTag();
-        if (root == null || !root.contains(DATA_KEY, Tag.TAG_COMPOUND)) {
+        CompoundTag root = getCustomData(stack);
+        if (!root.contains(DATA_KEY)) {
             return Join.AND;
         }
-        return Join.fromId(root.getCompound(DATA_KEY).getString(JOIN_KEY));
+        return Join.fromId(root.getCompoundOrEmpty(DATA_KEY).getStringOr(JOIN_KEY, ""));
     }
 
+    /** Sets the join state carried by a display stack; null removes it. */
     public static void setStackJoin(ItemStack stack, Join join) {
         if (stack == null || stack.isEmpty()) {
             return;
         }
-        CompoundTag root = stack.getOrCreateTag();
-        CompoundTag data = root.contains(DATA_KEY, Tag.TAG_COMPOUND)
-                ? root.getCompound(DATA_KEY) : new CompoundTag();
+        CompoundTag root = getCustomData(stack);
+        CompoundTag data = root.getCompoundOrEmpty(DATA_KEY);
         if (join == null) {
             data.remove(JOIN_KEY);
         } else {
@@ -153,7 +160,7 @@ public final class MultiMatcherData {
         } else {
             root.put(DATA_KEY, data);
         }
-        stack.setTag(root);
+        setCustomData(stack, root);
     }
 
     /** Folds all occupied slots left to right; the first occupied slot's join is ignored. */
@@ -161,16 +168,28 @@ public final class MultiMatcherData {
         if (target == null || target.isEmpty()) {
             return false;
         }
+        return fold(matcher, rule -> MatcherData.matches(rule, MatcherData.resolve(target, rule.path())));
+    }
+
+    /**
+     * Component-map variant used by the Sophisticated Core filter mixin, which receives the
+     * candidate item's {@link DataComponentMap} instead of an item stack.
+     */
+    public static boolean matches(ItemStack matcher, Item item, DataComponentMap components) {
+        if (item == null) {
+            return false;
+        }
+        return fold(matcher, rule -> MatcherData.matches(rule, components));
+    }
+
+    private static boolean fold(ItemStack matcher, Predicate<MatcherData.Rule> test) {
         boolean result = false;
         boolean started = false;
         for (Slot slot : slots(matcher)) {
             if (!slot.occupied()) {
                 continue;
             }
-            MatcherData.Rule rule = slot.rule();
-            Tag actual = target.hasTag()
-                    ? MatcherData.resolve(target.getTag(), rule.path()) : null;
-            boolean current = MatcherData.matches(rule, actual);
+            boolean current = test.test(slot.rule());
             if (!started) {
                 result = current;
                 started = true;
@@ -187,32 +206,50 @@ public final class MultiMatcherData {
 
     private static MatcherData.Rule readRule(CompoundTag encoded) {
         MatcherData.Rule rule = null;
-        if (encoded.contains(RULE_KEY, Tag.TAG_COMPOUND)) {
-            rule = MatcherData.decodeRule(encoded.getCompound(RULE_KEY));
-        } else if (encoded.contains(LEGACY_ITEM_KEY, Tag.TAG_COMPOUND)) {
+        if (encoded.contains(RULE_KEY)) {
+            rule = MatcherData.decodeRule(encoded.getCompoundOrEmpty(RULE_KEY));
+        } else if (encoded.contains(LEGACY_ITEM_KEY)) {
             // Earlier dev format stored the whole matcher item; keep only its rule.
-            rule = MatcherData.selectedRule(ItemStack.of(encoded.getCompound(LEGACY_ITEM_KEY)));
+            rule = legacyItemRule(encoded.getCompoundOrEmpty(LEGACY_ITEM_KEY));
         }
         return rule != null && !rule.path().isEmpty() ? rule : null;
     }
 
+    /** Decodes a matcher item that the earlier dev format stored whole, then reads its rule. */
+    private static MatcherData.Rule legacyItemRule(CompoundTag itemTag) {
+        return ItemStack.CODEC.parse(NbtOps.INSTANCE, itemTag).result()
+                .map(MatcherData::selectedRule)
+                .orElse(null);
+    }
+
     /** Converts the pre-slot rule list format into slot rules. */
     private static void migrateLegacyEntries(CompoundTag data, List<Slot> result) {
-        ListTag list = data.getList(LEGACY_ENTRIES_KEY, Tag.TAG_COMPOUND);
+        ListTag list = data.getListOrEmpty(LEGACY_ENTRIES_KEY);
         for (int i = 0; i < list.size() && i < SLOT_COUNT; i++) {
-            CompoundTag encoded = list.getCompound(i);
-            MatcherData.Rule rule = MatcherData.decodeRule(encoded.getCompound(RULE_KEY));
+            CompoundTag encoded = list.getCompoundOrEmpty(i);
+            MatcherData.Rule rule = MatcherData.decodeRule(encoded.getCompoundOrEmpty(RULE_KEY));
             if (!rule.path().isEmpty()) {
-                result.set(i, new Slot(Join.fromId(encoded.getString(JOIN_KEY)), rule));
+                result.set(i, new Slot(Join.fromId(encoded.getStringOr(JOIN_KEY, "")), rule));
             }
         }
     }
 
     private static CompoundTag getData(ItemStack matcher) {
-        CompoundTag root = matcher.getTag();
-        if (root == null || !root.contains(DATA_KEY, Tag.TAG_COMPOUND)) {
+        return getCustomData(matcher).getCompoundOrEmpty(DATA_KEY);
+    }
+
+    private static CompoundTag getCustomData(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
             return new CompoundTag();
         }
-        return root.getCompound(DATA_KEY);
+        return stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+    }
+
+    private static void setCustomData(ItemStack stack, CompoundTag root) {
+        if (root.isEmpty()) {
+            stack.remove(DataComponents.CUSTOM_DATA);
+        } else {
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+        }
     }
 }

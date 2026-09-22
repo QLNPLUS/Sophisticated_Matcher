@@ -184,16 +184,19 @@ public final class MatcherData {
         return true;
     }
 
-    /** Builds a standalone single-matcher item stack carrying the given rule. */
+    /**
+     * Builds a standalone single-matcher item stack carrying the given rule. This branch has
+     * no item NBT, so the rule is written into the item's custom data component.
+     */
     public static net.minecraft.world.item.ItemStack matcherStack(Rule rule) {
         net.minecraft.world.item.ItemStack stack =
                 new net.minecraft.world.item.ItemStack(com.sophisticatedmatcher.registry.ModItems.NBT_MATCHER.get());
         if (rule != null && !rule.path().isEmpty()) {
-            CompoundTag root = stack.getOrCreateTag();
+            CompoundTag root = new CompoundTag();
             CompoundTag data = new CompoundTag();
             data.put(RULE_KEY, encodeRule(rule));
             root.put(DATA_KEY, data);
-            stack.setTag(root);
+            stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, CustomData.of(root));
         }
         return stack;
     }
@@ -310,6 +313,14 @@ public final class MatcherData {
     public static boolean matches(ItemStack matcher, net.minecraft.world.item.Item item, DataComponentMap components) {
         if (item == null) return false;
         Rule rule = selectedRule(matcher);
+        return matches(rule, resolve(components, rule == null ? List.of() : rule.path()));
+    }
+
+    /**
+     * Matches an already-decoded rule against a candidate's component map, so the multi matcher
+     * can evaluate each of its stored rules without building a stack per rule.
+     */
+    public static boolean matches(Rule rule, DataComponentMap components) {
         return matches(rule, resolve(components, rule == null ? List.of() : rule.path()));
     }
 

@@ -3,10 +3,12 @@ package com.sophisticatedmatcher.client;
 import com.sophisticatedmatcher.SophisticatedMatcherMod;
 import com.sophisticatedmatcher.menu.MultiMatcherMenu;
 import com.sophisticatedmatcher.util.MultiMatcherData;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 
 import java.util.List;
@@ -18,10 +20,12 @@ import java.util.List;
  * inventory.
  */
 public final class MultiMatcherScreen extends AbstractContainerScreen<MultiMatcherMenu> {
-    private static final ResourceLocation BACKGROUND = new ResourceLocation(
+    private static final Identifier BACKGROUND = Identifier.fromNamespaceAndPath(
             SophisticatedMatcherMod.MOD_ID, "textures/gui/multi_background.png");
-    private static final ResourceLocation JOIN_SWITCH = new ResourceLocation(
+    private static final Identifier JOIN_SWITCH = Identifier.fromNamespaceAndPath(
             SophisticatedMatcherMod.MOD_ID, "textures/gui/join_switch.png");
+    private static final int GUI_WIDTH = 176;
+    private static final int GUI_HEIGHT = 166;
     private static final int STORAGE_SLOT_X = 7;
     private static final int STORAGE_SLOT_Y = 20;
     private static final int SLOT_PITCH = 18;
@@ -34,19 +38,8 @@ public final class MultiMatcherScreen extends AbstractContainerScreen<MultiMatch
     private static final int HINT_Y = 54;
     private static final int SWITCH_BUTTON_BASE = 300;
 
-    private final Inventory playerInventory;
-
     public MultiMatcherScreen(MultiMatcherMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
-        playerInventory = inventory;
-        imageWidth = 176;
-        imageHeight = 166;
-    }
-
-    @Override
-    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
-        graphics.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight,
-                imageWidth, imageHeight);
+        super(menu, inventory, title, GUI_WIDTH, GUI_HEIGHT);
     }
 
     private int firstOccupiedSlot() {
@@ -63,34 +56,47 @@ public final class MultiMatcherScreen extends AbstractContainerScreen<MultiMatch
     }
 
     @Override
-    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(font, title, 8, 6, 0xFF404040, false);
-        // 三段式开关：每个已占用槽（首槽除外）下方一帧，帧 = 当前连接状态。
-        for (int i = 0; i < MultiMatcherMenu.SLOT_COUNT; i++) {
-            if (!hasSwitch(i)) {
-                continue;
-            }
-            MultiMatcherData.Join join = menu.joinAt(i);
-            int x = STORAGE_SLOT_X + i * SLOT_PITCH + (SLOT_PITCH - SWITCH_WIDTH) / 2;
-            float u = join.ordinal() * SWITCH_WIDTH;
-            graphics.blit(JOIN_SWITCH, x, SWITCH_Y, u, 0.0F,
-                    SWITCH_WIDTH, SWITCH_HEIGHT, SWITCH_TEXTURE_WIDTH, SWITCH_TEXTURE_HEIGHT);
-        }
+    public void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND, leftPos, topPos, 0, 0,
+                GUI_WIDTH, GUI_HEIGHT, GUI_WIDTH, GUI_HEIGHT);
+        graphics.nextStratum();
+        super.extractContents(graphics, mouseX, mouseY, partialTick);
+        graphics.nextStratum();
+        extractJoinSwitches(graphics);
+    }
+
+    @Override
+    protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        graphics.text(font, title, 8, 6, 0xFF404040, false);
         if (firstOccupiedSlot() < 0) {
-            graphics.drawString(font,
+            graphics.text(font,
                     Component.translatable("gui." + SophisticatedMatcherMod.MOD_ID + ".multi_hint"),
                     8, HINT_Y, 0xFF777777, false);
         }
     }
 
+    /** 三段式开关：每个已占用槽（首槽除外）下方一帧，帧 = 当前连接状态。 */
+    private void extractJoinSwitches(GuiGraphicsExtractor graphics) {
+        for (int i = 0; i < MultiMatcherMenu.SLOT_COUNT; i++) {
+            if (!hasSwitch(i)) {
+                continue;
+            }
+            MultiMatcherData.Join join = menu.joinAt(i);
+            int x = leftPos + STORAGE_SLOT_X + i * SLOT_PITCH + (SLOT_PITCH - SWITCH_WIDTH) / 2;
+            float u = join.ordinal() * SWITCH_WIDTH;
+            graphics.blit(RenderPipelines.GUI_TEXTURED, JOIN_SWITCH, x, topPos + SWITCH_Y, u, 0.0F,
+                    SWITCH_WIDTH, SWITCH_HEIGHT, SWITCH_TEXTURE_WIDTH, SWITCH_TEXTURE_HEIGHT);
+        }
+    }
+
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        super.render(graphics, mouseX, mouseY, partialTick);
-        renderTooltip(graphics, mouseX, mouseY);
+    protected void extractTooltip(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         List<Component> switchTooltip = switchTooltip(mouseX, mouseY);
         if (switchTooltip != null) {
-            graphics.renderComponentTooltip(font, switchTooltip, mouseX, mouseY);
+            graphics.setComponentTooltipForNextFrame(font, switchTooltip, mouseX, mouseY);
+            return;
         }
+        super.extractTooltip(graphics, mouseX, mouseY);
     }
 
     /** Hover tooltip for a switch position: name plus a short description of that join state. */
@@ -111,10 +117,10 @@ public final class MultiMatcherScreen extends AbstractContainerScreen<MultiMatch
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) {
-            int slot = storageColumn(mouseX);
-            int y = (int) mouseY - topPos;
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (event.button() == 0) {
+            int slot = storageColumn(event.x());
+            int y = (int) event.y() - topPos;
             if (slot >= 0 && hasSwitch(slot) && y >= SWITCH_Y && y < SWITCH_Y + SWITCH_HEIGHT) {
                 int segment = Math.min(2, Math.max(0, (y - SWITCH_Y) * 3 / SWITCH_HEIGHT));
                 MultiMatcherData.Join join = MultiMatcherData.Join.values()[segment];
@@ -124,7 +130,7 @@ public final class MultiMatcherScreen extends AbstractContainerScreen<MultiMatch
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     private int storageColumn(double mouseX) {

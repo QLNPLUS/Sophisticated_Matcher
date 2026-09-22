@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:name_tag",
+    "minecraft:diamond"
+  ],
+  "result": {
+    "id": "sophisticated_matcher:multi_nbt_matcher"
+  }
+}

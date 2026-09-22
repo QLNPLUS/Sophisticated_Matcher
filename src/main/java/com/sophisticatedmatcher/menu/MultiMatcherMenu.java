@@ -9,7 +9,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -32,7 +32,7 @@ public final class MultiMatcherMenu extends AbstractContainerMenu {
         @Override
         public void setChanged() {
             super.setChanged();
-            if (player != null && !player.level().isClientSide) {
+            if (player != null && !player.level().isClientSide()) {
                 persistToHeldMatcher();
             }
         }
@@ -88,7 +88,7 @@ public final class MultiMatcherMenu extends AbstractContainerMenu {
     }
 
     @Override
-    public void clicked(int slotId, int button, ClickType clickType, Player player) {
+    public void clicked(int slotId, int button, ContainerInput clickType, Player player) {
         if (slotId >= 0 && slotId < SLOT_COUNT) {
             // Ghost storage: never route through vanilla item moving, the cursor is untouched.
             handleStorageClick(slotId, button, clickType);
@@ -97,8 +97,8 @@ public final class MultiMatcherMenu extends AbstractContainerMenu {
         super.clicked(slotId, button, clickType, player);
     }
 
-    private void handleStorageClick(int slotId, int button, ClickType clickType) {
-        if (clickType != ClickType.PICKUP) {
+    private void handleStorageClick(int slotId, int button, ContainerInput clickType) {
+        if (clickType != ContainerInput.PICKUP) {
             return;
         }
         ItemStack carried = getCarried();
