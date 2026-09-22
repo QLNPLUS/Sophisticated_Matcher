@@ -2,6 +2,7 @@ package com.sophisticatedmatcher;
 
 import com.sophisticatedmatcher.creative.CreativeTabCompat;
 import com.sophisticatedmatcher.network.MatcherNetwork;
+import com.sophisticatedmatcher.registry.ModCreativeTabs;
 import com.sophisticatedmatcher.registry.ModItems;
 import com.sophisticatedmatcher.registry.ModMenus;
 import net.neoforged.bus.api.IEventBus;
@@ -16,6 +17,7 @@ public final class SophisticatedMatcherMod {
     public SophisticatedMatcherMod(IEventBus modEventBus, ModContainer modContainer) {
         ModItems.ITEMS.register(modEventBus);
         ModMenus.MENUS.register(modEventBus);
+        ModCreativeTabs.TABS.register(modEventBus);
         modEventBus.addListener(CreativeTabCompat::addItems);
         modEventBus.addListener(MatcherNetwork::register);
         modContainer.registerConfig(

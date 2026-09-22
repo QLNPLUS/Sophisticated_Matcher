@@ -1,6 +1,6 @@
 package com.sophisticatedmatcher.menu;
 
-import com.sophisticatedmatcher.item.NbtMatcherItem;
+import com.sophisticatedmatcher.item.MatcherItems;
 import com.sophisticatedmatcher.registry.ModMenus;
 import com.sophisticatedmatcher.util.MatcherData;
 import net.minecraft.server.level.ServerPlayer;
@@ -88,7 +88,7 @@ public final class MatcherMenu extends AbstractContainerMenu {
     public void clicked(int slotId, int button, ContainerInput clickType, Player player) {
         if (slotId == PREVIEW_SLOT && clickType == ContainerInput.PICKUP) {
             ItemStack carried = getCarried();
-            if (!carried.isEmpty() && !NbtMatcherItem.isMatcher(carried)) {
+            if (!carried.isEmpty() && !MatcherItems.isMatcher(carried)) {
                 preview.setItem(0, carried.copyWithCount(1));
                 selectedIndex = -1;
                 broadcastChanges();
@@ -130,10 +130,10 @@ public final class MatcherMenu extends AbstractContainerMenu {
     }
 
     public static ItemStack findMatcher(Player player) {
-        if (NbtMatcherItem.isMatcher(player.getMainHandItem())) {
+        if (MatcherItems.isMatcher(player.getMainHandItem())) {
             return player.getMainHandItem();
         }
-        if (NbtMatcherItem.isMatcher(player.getOffhandItem())) {
+        if (MatcherItems.isMatcher(player.getOffhandItem())) {
             return player.getOffhandItem();
         }
         return null;
@@ -151,7 +151,7 @@ public final class MatcherMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return !stack.isEmpty() && !NbtMatcherItem.isMatcher(stack);
+            return !stack.isEmpty() && !MatcherItems.isMatcher(stack);
         }
 
         @Override

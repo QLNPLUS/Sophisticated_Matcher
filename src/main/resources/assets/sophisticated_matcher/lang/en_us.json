@@ -1,7 +1,10 @@
 {
+  "itemGroup.sophisticated_matcher": "Sophisticated Matcher",
   "item.sophisticated_matcher.nbt_matcher": "Component Matcher",
+  "item.sophisticated_matcher.multi_nbt_matcher": "Multi Component Matcher",
   "container.sophisticated_matcher.matcher": "Component Matcher",
   "container.sophisticated_matcher.editor": "Component Matcher",
+  "container.sophisticated_matcher.multi": "Multi Component Matcher",
   "gui.sophisticated_matcher.save": "Save",
   "gui.sophisticated_matcher.edit": "Component Matcher",
   "gui.sophisticated_matcher.save_rule": "Save",
@@ -34,5 +37,14 @@
   "gui.sophisticated_matcher.rule.exists": "%s exists",
   "gui.sophisticated_matcher.rule.not_exists": "%s does not exist",
   "tooltip.sophisticated_matcher.selected": "Filter component: %s",
-  "tooltip.sophisticated_matcher.empty": "No filter component saved"
+  "tooltip.sophisticated_matcher.empty": "No filter component saved",
+  "tooltip.sophisticated_matcher.multi_empty": "No matchers stored yet",
+  "tooltip.sophisticated_matcher.rule_count": "%s matchers stored",
+  "gui.sophisticated_matcher.multi_hint": "Place configured component matchers in the slots",
+  "gui.sophisticated_matcher.join.and": "AND",
+  "gui.sophisticated_matcher.join.but": "BUT",
+  "gui.sophisticated_matcher.join.or": "OR",
+  "gui.sophisticated_matcher.join_desc.and": "Holds together with the previous result",
+  "gui.sophisticated_matcher.join_desc.but": "Previous result holds, but this one must not",
+  "gui.sophisticated_matcher.join_desc.or": "Either the previous result or this one holds"
 }

@@ -1,7 +1,6 @@
 package com.sophisticatedmatcher.compat;
 
-import com.sophisticatedmatcher.item.NbtMatcherItem;
-import com.sophisticatedmatcher.util.MatcherData;
+import com.sophisticatedmatcher.item.MatcherItems;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -15,8 +14,8 @@ public abstract class SophisticatedFilterLogicMixin {
     @Inject(method = "stackMatchesFilter", at = @At("HEAD"), cancellable = true, remap = false)
     private void sophisticatedMatcher$match(ItemStack filter, Item item, int damageValue, boolean empty,
                                              DataComponentMap components, CallbackInfoReturnable<Boolean> callback) {
-        if (NbtMatcherItem.isMatcher(filter)) {
-            callback.setReturnValue(!empty && MatcherData.matches(filter, item, components));
+        if (MatcherItems.isMatcher(filter)) {
+            callback.setReturnValue(!empty && MatcherItems.matches(filter, item, components));
         }
     }
 }

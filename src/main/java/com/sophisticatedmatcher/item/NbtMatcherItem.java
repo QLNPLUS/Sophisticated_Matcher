@@ -25,7 +25,7 @@ public final class NbtMatcherItem extends Item {
     }
 
     public static boolean isMatcher(ItemStack stack) {
-        return !stack.isEmpty() && stack.getItem() instanceof NbtMatcherItem;
+        return stack != null && !stack.isEmpty() && stack.getItem() instanceof NbtMatcherItem;
     }
 
     @Override

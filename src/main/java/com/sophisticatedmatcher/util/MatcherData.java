@@ -171,13 +171,35 @@ public final class MatcherData {
         saveRule(matcher, preview, Rule.equals(parsePath(entry.id()), (Tag) entry.value()));
     }
 
-    public static boolean saveRule(ItemStack matcher, ItemStack preview, Rule rule) {
-        if (!NbtMatcherItem.isMatcher(matcher) || preview.isEmpty() || rule == null || rule.path().isEmpty()) {
+    /** Validates a rule against a preview item: path must resolve and numeric checks must hold. */
+    public static boolean validRule(ItemStack preview, Rule rule) {
+        if (preview.isEmpty() || rule == null || rule.path().isEmpty()) {
             return false;
         }
         Tag sample = resolve(preview, rule.path());
         if (sample == null || (rule.operator().isNumeric() && !(sample instanceof NumericTag))
                 || (rule.operator().isNumeric() && (!numericValues(rule) || !validRange(rule)))) {
+            return false;
+        }
+        return true;
+    }
+
+    /** Builds a standalone single-matcher item stack carrying the given rule. */
+    public static net.minecraft.world.item.ItemStack matcherStack(Rule rule) {
+        net.minecraft.world.item.ItemStack stack =
+                new net.minecraft.world.item.ItemStack(com.sophisticatedmatcher.registry.ModItems.NBT_MATCHER.get());
+        if (rule != null && !rule.path().isEmpty()) {
+            CompoundTag root = stack.getOrCreateTag();
+            CompoundTag data = new CompoundTag();
+            data.put(RULE_KEY, encodeRule(rule));
+            root.put(DATA_KEY, data);
+            stack.setTag(root);
+        }
+        return stack;
+    }
+
+    public static boolean saveRule(ItemStack matcher, ItemStack preview, Rule rule) {
+        if (!NbtMatcherItem.isMatcher(matcher) || !validRule(preview, rule)) {
             return false;
         }
 

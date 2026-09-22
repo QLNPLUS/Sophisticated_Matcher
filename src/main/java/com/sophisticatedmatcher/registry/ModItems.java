@@ -1,6 +1,7 @@
 package com.sophisticatedmatcher.registry;
 
 import com.sophisticatedmatcher.SophisticatedMatcherMod;
+import com.sophisticatedmatcher.item.MultiMatcherItem;
 import com.sophisticatedmatcher.item.NbtMatcherItem;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -13,6 +14,10 @@ public final class ModItems {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(Registries.ITEM, SophisticatedMatcherMod.MOD_ID);
     public static final Supplier<Item> NBT_MATCHER = ITEMS.register("nbt_matcher",
             key -> new NbtMatcherItem(new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, key))
+                    .stacksTo(1)));
+    public static final Supplier<Item> MULTI_NBT_MATCHER = ITEMS.register("multi_nbt_matcher",
+            key -> new MultiMatcherItem(new Item.Properties()
                     .setId(ResourceKey.create(Registries.ITEM, key))
                     .stacksTo(1)));
 
