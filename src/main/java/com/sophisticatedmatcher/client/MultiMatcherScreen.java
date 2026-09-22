@@ -18,9 +18,9 @@ import java.util.List;
  * inventory.
  */
 public final class MultiMatcherScreen extends AbstractContainerScreen<MultiMatcherMenu> {
-    private static final ResourceLocation BACKGROUND = new ResourceLocation(
+    private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(
             SophisticatedMatcherMod.MOD_ID, "textures/gui/multi_background.png");
-    private static final ResourceLocation JOIN_SWITCH = new ResourceLocation(
+    private static final ResourceLocation JOIN_SWITCH = ResourceLocation.fromNamespaceAndPath(
             SophisticatedMatcherMod.MOD_ID, "textures/gui/join_switch.png");
     private static final int STORAGE_SLOT_X = 7;
     private static final int STORAGE_SLOT_Y = 20;

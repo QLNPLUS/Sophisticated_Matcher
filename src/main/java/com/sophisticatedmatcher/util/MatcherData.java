@@ -184,16 +184,20 @@ public final class MatcherData {
         return true;
     }
 
-    /** Builds a standalone single-matcher item stack carrying the given rule. */
+    /**
+     * Builds a standalone single-matcher item stack carrying the given rule. On 1.21.1 the
+     * rule travels in the {@code CUSTOM_DATA} component - the same place {@link #saveRule}
+     * writes it - so the display stack is read back by {@link #selectedRule}.
+     */
     public static net.minecraft.world.item.ItemStack matcherStack(Rule rule) {
         net.minecraft.world.item.ItemStack stack =
                 new net.minecraft.world.item.ItemStack(com.sophisticatedmatcher.registry.ModItems.NBT_MATCHER.get());
         if (rule != null && !rule.path().isEmpty()) {
-            CompoundTag root = stack.getOrCreateTag();
-            CompoundTag data = new CompoundTag();
+            CompoundTag root = getCustomData(stack);
+            CompoundTag data = root.getCompound(DATA_KEY);
             data.put(RULE_KEY, encodeRule(rule));
             root.put(DATA_KEY, data);
-            stack.setTag(root);
+            stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, CustomData.of(root));
         }
         return stack;
     }

@@ -15,12 +15,16 @@ import java.util.List;
  * never the matcher item itself. Evaluation folds left to right over the occupied slots
  * from lowest index to highest: the first occupied slot's join state is ignored, then
  * AND = acc &amp;&amp; rule, BUT = acc &amp;&amp; !rule, OR = acc || rule.
+ *
+ * <p>On NeoForge 1.21.1 item data is read and written through the {@code CUSTOM_DATA}
+ * component exactly like {@link MatcherData}: the slot list lives under the
+ * {@code sophisticated_matcher} compound key {@code slots}, and every occupied entry
+ * carries its join id plus the encoded rule it was read from.
  */
 public final class MultiMatcherData {
     private static final String DATA_KEY = "sophisticated_matcher";
     private static final String SLOTS_KEY = "slots";
     private static final String LEGACY_ENTRIES_KEY = "entries";
-    private static final String LEGACY_ITEM_KEY = "item";
     private static final String JOIN_KEY = "join";
     private static final String RULE_KEY = "rule";
 
@@ -115,34 +119,29 @@ public final class MultiMatcherData {
             }
             list.add(encoded);
         }
-        CompoundTag root = matcher.getOrCreateTag();
-        CompoundTag data = root.contains(DATA_KEY, Tag.TAG_COMPOUND)
-                ? root.getCompound(DATA_KEY) : new CompoundTag();
+        CompoundTag root = getCustomData(matcher);
+        CompoundTag data = root.getCompound(DATA_KEY);
         data.put(SLOTS_KEY, list);
         data.remove(LEGACY_ENTRIES_KEY);
         root.put(DATA_KEY, data);
-        matcher.setTag(root);
+        matcher.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                net.minecraft.world.item.component.CustomData.of(root));
     }
 
-    /** Cycles the join state stored in a display stack's own tag; null removes it. */
+    /** Cycles the join state stored in a display stack's own component data; null removes it. */
     public static Join stackJoin(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return Join.AND;
         }
-        CompoundTag root = stack.getTag();
-        if (root == null || !root.contains(DATA_KEY, Tag.TAG_COMPOUND)) {
-            return Join.AND;
-        }
-        return Join.fromId(root.getCompound(DATA_KEY).getString(JOIN_KEY));
+        return Join.fromId(getData(stack).getString(JOIN_KEY));
     }
 
     public static void setStackJoin(ItemStack stack, Join join) {
         if (stack == null || stack.isEmpty()) {
             return;
         }
-        CompoundTag root = stack.getOrCreateTag();
-        CompoundTag data = root.contains(DATA_KEY, Tag.TAG_COMPOUND)
-                ? root.getCompound(DATA_KEY) : new CompoundTag();
+        CompoundTag root = getCustomData(stack);
+        CompoundTag data = root.getCompound(DATA_KEY);
         if (join == null) {
             data.remove(JOIN_KEY);
         } else {
@@ -153,7 +152,12 @@ public final class MultiMatcherData {
         } else {
             root.put(DATA_KEY, data);
         }
-        stack.setTag(root);
+        if (root.isEmpty()) {
+            stack.remove(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+        } else {
+            stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                    net.minecraft.world.item.component.CustomData.of(root));
+        }
     }
 
     /** Folds all occupied slots left to right; the first occupied slot's join is ignored. */
@@ -168,8 +172,7 @@ public final class MultiMatcherData {
                 continue;
             }
             MatcherData.Rule rule = slot.rule();
-            Tag actual = target.hasTag()
-                    ? MatcherData.resolve(target.getTag(), rule.path()) : null;
+            Tag actual = MatcherData.resolve(target, rule.path());
             boolean current = MatcherData.matches(rule, actual);
             if (!started) {
                 result = current;
@@ -189,10 +192,12 @@ public final class MultiMatcherData {
         MatcherData.Rule rule = null;
         if (encoded.contains(RULE_KEY, Tag.TAG_COMPOUND)) {
             rule = MatcherData.decodeRule(encoded.getCompound(RULE_KEY));
-        } else if (encoded.contains(LEGACY_ITEM_KEY, Tag.TAG_COMPOUND)) {
-            // Earlier dev format stored the whole matcher item; keep only its rule.
-            rule = MatcherData.selectedRule(ItemStack.of(encoded.getCompound(LEGACY_ITEM_KEY)));
         }
+        // The Forge 1.20.1 implementation also recovered a rule from an entry that stored a
+        // whole matcher item. That format predates the multi matcher on this branch, so
+        // nothing can carry it here, and 1.21.1 only parses an ItemStack with a
+        // HolderLookup.Provider that this helper never receives. Slots therefore only ever
+        // carry an encoded rule.
         return rule != null && !rule.path().isEmpty() ? rule : null;
     }
 
@@ -208,11 +213,15 @@ public final class MultiMatcherData {
         }
     }
 
-    private static CompoundTag getData(ItemStack matcher) {
-        CompoundTag root = matcher.getTag();
-        if (root == null || !root.contains(DATA_KEY, Tag.TAG_COMPOUND)) {
+    private static CompoundTag getData(ItemStack stack) {
+        return getCustomData(stack).getCompound(DATA_KEY);
+    }
+
+    private static CompoundTag getCustomData(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
             return new CompoundTag();
         }
-        return root.getCompound(DATA_KEY);
+        return stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
     }
 }

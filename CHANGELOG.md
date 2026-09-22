@@ -2,10 +2,10 @@
 
 ## 1.3.0 - 2026-09-22
 
-- The Multi NBT Matcher stores up to nine matcher rules in its own slot GUI. Like the single matcher's preview slot, placing a matcher only reads its rule: the matcher itself is never consumed or kept.
+- The Multi Component Matcher stores up to nine matcher rules in its own slot GUI. Like the single matcher's preview slot, placing a matcher only reads its rule: the matcher itself is never consumed or kept.
 - Added a Sophisticated Matcher creative tab holding both matcher items.
-- Added crafting recipes: Name Tag + Gold Ingot crafts the NBT Matcher, Name Tag + Diamond crafts the Multi NBT Matcher.
-- The GUI uses a standard-sized container background with nine storage slots and the player inventory; no preview or NBT tree window.
+- Added crafting recipes: Name Tag + Gold Ingot crafts the Component Matcher, Name Tag + Diamond crafts the Multi Component Matcher.
+- The GUI uses a standard-sized container background with nine storage slots and the player inventory; no preview or component tree window.
 - Each stored matcher shows a three-position switch under its slot; click the top, middle, or bottom third to set AND, BUT, or OR. Hovering a position shows a tooltip with its name and meaning.
 - The first stored matcher's join state is ignored, so it gets no switch.
 - Results fold left to right over the stored matchers: the first matcher decides, each following one combines through its join state (AND keeps both, BUT keeps the first but not the second, OR needs either).

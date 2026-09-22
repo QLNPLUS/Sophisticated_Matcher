@@ -42,7 +42,7 @@ Forge 1.20.1 位于独立 worktree `D:\projects\Sophisticated_Matcher-forge-1.20
 
 构建产物：
 
-- `build/libs/sophisticated_matcher-neoforge-1.21.1-0.1.0.jar`
+- `build/libs/sophisticated_matcher-neoforge-1.21.1-1.3.0.jar`
 - `D:\projects\Sophisticated_Matcher-forge-1.20.1\build\libs\sophisticated-matcher-forge-1.20.1-0.1.0.jar`
 
 Forge 1.20.1 分支声明 Sophisticated Core 最低版本为 `1.3.6.1514`。

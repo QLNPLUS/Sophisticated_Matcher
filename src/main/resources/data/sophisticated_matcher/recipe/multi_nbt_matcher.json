@@ -1,5 +1,6 @@
 {
   "type": "minecraft:crafting_shapeless",
+  "category": "misc",
   "ingredients": [
     {
       "item": "minecraft:name_tag"
@@ -9,6 +10,7 @@
     }
   ],
   "result": {
-    "item": "sophisticated_matcher:multi_nbt_matcher"
+    "id": "sophisticated_matcher:multi_nbt_matcher",
+    "count": 1
   }
 }
