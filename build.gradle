@@ -89,6 +89,7 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
+    flatDir { dirs 'libs' }
     maven { url = 'https://maven.minecraftforge.net' }
     mavenCentral()
     maven { url = 'https://maven.latvian.dev/releases' }      // KubeJS / Rhino
@@ -101,8 +102,8 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:1.20.1-47.4.20"
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-    compileOnly files("libs/sophisticatedcore-${sophisticated_core_version}.jar")
-    runtimeOnly files("libs/sophisticatedcore-${sophisticated_core_version}.jar")
+    compileOnly fg.deobf("local:sophisticatedcore:${sophisticated_core_version}")
+    runtimeOnly fg.deobf("local:sophisticatedcore:${sophisticated_core_version}")
 
     // ---------------- KubeJS 集成(可选,运行时不是必须的) ----------------
     // 如果这两个依赖在你的网络环境下解析失败,请:
